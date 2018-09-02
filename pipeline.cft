@@ -46,6 +46,8 @@ Resources:
   # CodeBuild project and resources (S3 Bucket for build artifacts, Role, Project)
   BuildArtifactsBucket:
       Type: AWS::S3::Bucket
+  HelloWorldRoot:
+      Type: AWS::S3::Bucket
   CodeBuildServiceRole:
       Type: AWS::IAM::Role
       Properties:
@@ -74,6 +76,7 @@ Resources:
                         - 'logs:PutLogEvents'
                     - Effect: Allow
                       Resource:
+                        - !Sub 'arn:aws:s3:::${HelloWorldRoot}/*'
                         - !Sub 'arn:aws:s3:::${BuildArtifactsBucket}/*'
                       Action: 
                         - 's3:GetObject'
@@ -93,6 +96,8 @@ Resources:
               EnvironmentVariables:
                 - Name: BUILD_OUTPUT_BUCKET
                   Value: !Ref BuildArtifactsBucket
+                - Name: ROOTDIRBUCKET
+                  Value: !Ref RootDirBucket
           ServiceRole: !GetAtt CodeBuildServiceRole.Arn
           Source: 
               Type: CODEPIPELINE
@@ -216,7 +221,7 @@ Resources:
                       ChangeSetName: !Sub '${ServiceName}-ChangeSet-Approach1'
                       TemplatePath: BuiltZip::approach1.yaml
                       Capabilities: CAPABILITY_IAM
-                      ParameterOverrides: !Sub '{ "InstanceType": "${InstanceType}", "OperatorEMail": "${OperatorEMail}", "KeyName": "${KeyName}", "SSHLocation": "${SSHLocation}" }'
+                      ParameterOverrides: !Sub '{ "InstanceType": "${InstanceType}", "OperatorEMail": "${OperatorEMail}", "KeyName": "${KeyName}", "SSHLocation": "${SSHLocation}", "RootDirBucket": "${HelloWorldRoot}" }'
 
                     InputArtifacts:
                       - Name: BuiltZip
