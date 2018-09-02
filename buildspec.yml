@@ -14,7 +14,7 @@ phases:
   post_build:
     commands:
       - echo "Starting build `date` in `pwd`"
-      - aws s3 cp onica-helloworld.tar.gz s3://cd-onica-helloworld/
+      - aws s3 cp onica-helloworld.tar.gz s3://$ROOTDIRBUCKET/
       - test -e app-sam.yaml && aws cloudformation package --template-file app-sam.yaml --s3-bucket $BUILD_OUTPUT_BUCKET --output-template-file app-output_sam.yaml
       - aws cloudformation package --template-file test-sam.yaml --s3-bucket $BUILD_OUTPUT_BUCKET --output-template-file test-output_sam.yaml
       - sed -i '/DefinitionUri/d' app-output_sam.yaml
