@@ -1,7 +1,8 @@
-# automatic-goggles
+automatic-goggles
+=================
+
 Onica Approach 1
-=
-Approach 1
+================
 
 VPC with private / public subnets and all required dependent infrastructure (DO NOT USE THE DEFAULT VPC)
 
