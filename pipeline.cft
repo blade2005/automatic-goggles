@@ -97,7 +97,7 @@ Resources:
                 - Name: BUILD_OUTPUT_BUCKET
                   Value: !Ref BuildArtifactsBucket
                 - Name: ROOTDIRBUCKET
-                  Value: !Ref RootDirBucket
+                  Value: !Ref HelloWorldRoot
           ServiceRole: !GetAtt CodeBuildServiceRole.Arn
           Source: 
               Type: CODEPIPELINE
