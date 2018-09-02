@@ -527,7 +527,7 @@ Resources:
       - IpProtocol: tcp
         FromPort: 80
         ToPort: 80
-        GroupId: !GetAtt InstanceSG.GroupId
+        DestinationSecurityGroupId: !GetAtt InstanceSG.GroupId
 
   InstanceSG:
     Type: AWS::EC2::SecurityGroup
