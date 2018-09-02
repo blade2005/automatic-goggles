@@ -249,7 +249,6 @@ Resources:
         config:
           packages:
             yum:
-              uwsgi: []
               curl: []
               python36: []
               python36-devel: []
@@ -314,11 +313,12 @@ Resources:
       InstanceType: !Ref 'InstanceType'
       UserData: !Base64
         Fn::Join:
-        - '\n'
+        - "\n"
         - - '#!/bin/bash -xe'
           - yum update -y aws-cfn-bootstrap
           - !Sub '/opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource LaunchConfig --region ${AWS::Region}'
           - !Sub '/opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource WebServerGroup --region ${AWS::Region}'
+          - ''
   WebServerScaleUpPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
     Properties:
