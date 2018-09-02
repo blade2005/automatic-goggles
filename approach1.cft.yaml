@@ -342,13 +342,13 @@ Resources:
       CidrBlock: 172.17.43.0/24
       EnableDnsSupport: True
       EnableDnsHostnames: True
- PublicSubnetA:
+  PublicSubnetA:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
       CidrBlock: 172.17.43.0/26
       AvailabilityZone: "us-east-1c"
- PublicSubnetB:
+  PublicSubnetB:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
