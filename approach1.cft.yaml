@@ -500,7 +500,7 @@ Resources:
   ElasticLoadBalancer:
     Type: AWS::ElasticLoadBalancing::LoadBalancer
     Properties:
-      SecurityGroups: !Ref ELBSG
+      SecurityGroups: [!Ref ELBSG]
       Subnets: [!Ref PublicSubnetB, !Ref PublicSubnetA ]
       CrossZone: true
       Listeners:
