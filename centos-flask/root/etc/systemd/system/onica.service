@@ -1,11 +1,16 @@
 [Unit]
 Description=uWSGI Emperor
 After=syslog.target
+Requires=nginx
+After=nginx.service
 
 [Service]
+User=nginx
+Group=nginx
 ExecStart=/opt/onica-hello-world/onica-hello-world/bin/uwsgi --ini /opt/onica-hello-world/onica.ini
 # Requires systemd version 211 or newer
-RuntimeDirectory=/opt/onica-hello-world
+RuntimeDirectory=onica
+WorkingDirectory=/opt/onica-hello-world
 Restart=always
 KillSignal=SIGQUIT
 Type=notify

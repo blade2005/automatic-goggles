@@ -1,4 +1,4 @@
-import os
+import socket
 from flask import Flask
 app = Flask(__name__)
 
@@ -8,7 +8,7 @@ app.wsgi_app = ProxyFix(app.wsgi_app)
 
 @app.route('/')
 def hello(name=None):
-    return render_template('hello.html', hostname=os.getfqdn())
+    return render_template('hello.html', hostname=socket.getfqdn())
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
