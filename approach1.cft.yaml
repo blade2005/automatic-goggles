@@ -1,6 +1,9 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: Deploy a Flask Application with rendering displaying a landing page including the server name
 Parameters:
+  RootDirBucket:
+    Description: S3 Bucket name for the root dir tarball
+    Type: String
   InstanceType:
     Description: WebServer EC2 instance type
     Type: String
@@ -211,6 +214,22 @@ Resources:
       VpcId: !Ref VPC
       CidrBlock: 172.17.43.64/26
       AvailabilityZone: "us-east-2a"
+  WebServerInstanceRole:
+      Type: AWS::IAM::Role
+      Properties:
+          Path: /
+          Policies:
+              - PolicyName: WebServerInstance
+                PolicyDocument:
+                  Version: '2012-10-17'
+                  Statement:
+                    - Effect: Allow
+                      Resource:
+                        - !Sub 'arn:aws:s3:::${HelloWorldRoot}/*'
+                      Action: 
+                        - 's3:GetObject'
+                        - 's3:GetObjectVersion'
+                        - 's3:PutObject'
 
   NotificationTopic:
     Type: AWS::SNS::Topic
@@ -281,7 +300,7 @@ Resources:
 
                     ']]
           sources:
-            /: "https://s3.amazonaws.com/cd-onica-helloworld/onica-helloworld.tar.gz"
+            /: !Sub "https://s3.amazonaws.com/${RootDirBucket}/onica-helloworld.tar.gz"
           commands:
             installpip:
               command: curl https://bootstrap.pypa.io/get-pip.py | python3.6
@@ -305,6 +324,7 @@ Resources:
                 ensureRunning: true
                 files: [/etc/cfn/cfn-hup.conf, /etc/cfn/hooks.d/cfn-auto-reloader.conf]
     Properties:
+      IamInstanceProfile: !Ref WebServerInstanceRole
       AssociatePublicIpAddress: True
       KeyName: !Ref 'KeyName'
       ImageId: !FindInMap [AWSRegionArch2AMI, !Ref 'AWS::Region', !FindInMap [AWSInstanceType2Arch,
