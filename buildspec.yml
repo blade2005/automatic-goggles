@@ -1,0 +1,27 @@
+version: 0.1
+
+phases:
+  pre_build:
+    commands:
+      - aws --version
+      - pip install --upgrade awscli || echo We failed to upgrade awscli
+      - aws --version
+  build:
+    commands:
+      - test -e VERSION && echo "Building version $(cat VERSION)"
+      - find . -maxdepth 1 -mindepth 1 -type d -not -path "./.git" -print -exec pip install -r {}/requirements.txt --upgrade -t {} \;
+      - cd root && tar -czf ../onica-helloworld.tar.gz .
+  post_build:
+    commands:
+      - echo "Starting build `date` in `pwd`"
+      - aws s3 cp onica-helloworld.tar.gz s3://cd-onica-helloworld/
+      - test -e app-sam.yaml && aws cloudformation package --template-file app-sam.yaml --s3-bucket $BUILD_OUTPUT_BUCKET --output-template-file app-output_sam.yaml
+      - aws cloudformation package --template-file test-sam.yaml --s3-bucket $BUILD_OUTPUT_BUCKET --output-template-file test-output_sam.yaml
+      - sed -i '/DefinitionUri/d' app-output_sam.yaml
+      - echo "build completed on `date`"
+
+artifacts:
+  files:
+    - app-output_sam.yaml
+    - test-output_sam.yaml
+  discard-paths: yes
