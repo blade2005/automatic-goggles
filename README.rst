@@ -31,3 +31,10 @@ Some kind of automation or scriptin gthat achieves the following:
 All AWS resources must be created using Terraform or CloudFormation
 
 No resources may be created or managed by hand other than EC2 SSH keys
+
+
+Deploy
+======
+You can deploy by:
+
+	aws cloudformation create-stack --cli-input-json file://approach1.conf --template-body file://approach1.cft.yaml

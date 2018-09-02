@@ -1,14 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Metadata:
-  License: Apache-2.0
-Description: 'AWS CloudFormation Sample Template AutoScalingMultiAZWithNotifications:
-  Create a multi-az, load balanced and Auto Scaled sample web site running on an Apache
-  Web Server. The application is configured to span all Availability Zones in the
-  region and is Auto-Scaled based on the CPU utilization of the web servers. Notifications
-  will be sent to the operator email address on scaling events. The instances are
-  load balanced with a simple health check against the default web page. **WARNING**
-  This template creates one or more Amazon EC2 instances and an Elastic Load Balancer.
-  You will be billed for the AWS resources used if you create a stack from this template.'
+Description: Deploy a Flask Application with rendering displaying a landing page including the server name
 Parameters:
   InstanceType:
     Description: WebServer EC2 instance type
@@ -347,13 +338,13 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       CidrBlock: 172.17.43.0/26
-      AvailabilityZone: "us-east-1c"
+      AvailabilityZone: "us-east-2c"
   PublicSubnetB:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
       CidrBlock: 172.17.43.64/26
-      AvailabilityZone: "us-east-1a"
+      AvailabilityZone: "us-east-2a"
 
   NotificationTopic:
     Type: AWS::SNS::Topic
@@ -391,20 +382,13 @@ Resources:
         config:
           packages:
             yum:
-              httpd: []
-              salt: []
+              uwsgi: []
+              curl: []
+              python36: []
+              python36-devel: []
+              gcc: []
+              nginx: []
           files:
-            /var/www/html/index.html:
-              content: !Join
-                - "\n"
-                - - "<html><head>"
-                  - "<title>Chill. Relax. I'm a Panda.</title>"
-                  - "</head>"
-                  - "<body><center><h1>Chill. Relax. I'm a Panda.</h1><img src="http://gallery.stoneydavis.com/panda.jpg"></center></body>"
-                  - "</html>"
-              mode: '000644'
-              owner: root
-              group: root
             /etc/cfn/cfn-hup.conf:
               content: !Join ['', ['[main]
 
@@ -430,6 +414,21 @@ Resources:
                     ', 'runas=root
 
                     ']]
+          sources:
+            /: "https://s3.amazonaws.com/cd-onica-helloworld/onica-helloworld.tar.gz"
+          commands:
+            installpip:
+              command: curl https://bootstrap.pypa.io/get-pip.py | python3.6
+            installvirtualenv:
+              command: pip3.6 install virtualenv
+            createvirtualenv:
+              cwd: /opt/onica-hello-world
+              command: virtualenv onica-hello-world
+            installdepends:
+              command: source onica-hello-world/bin/activate && pip install uwsgi flask
+              cwd: /opt/onica-hello-world
+            fixperms:
+              command: "chown -R nginx: /opt/onica-hello-world"
           services:
             sysvinit:
               httpd:
