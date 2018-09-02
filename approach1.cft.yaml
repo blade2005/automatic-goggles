@@ -228,8 +228,6 @@ Resources:
                         - !Sub 'arn:aws:s3:::${HelloWorldRoot}/*'
                       Action: 
                         - 's3:GetObject'
-                        - 's3:GetObjectVersion'
-                        - 's3:PutObject'
 
   NotificationTopic:
     Type: AWS::SNS::Topic
