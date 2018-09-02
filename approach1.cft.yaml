@@ -312,7 +312,7 @@ Resources:
 
                     ']]
           sources:
-            /: !Sub "https://s3.amazonaws.com/${RootDirBucket}/onica-helloworld.tar.gz"
+            /: !Sub "https://${RootDirBucket}.s3.amazonaws.com/onica-helloworld.tar.gz"
           commands:
             installpip:
               command: curl https://bootstrap.pypa.io/get-pip.py | python3.6
