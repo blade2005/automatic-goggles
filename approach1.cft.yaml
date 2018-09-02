@@ -225,7 +225,7 @@ Resources:
                   Statement:
                     - Effect: Allow
                       Resource:
-                        - !Sub 'arn:aws:s3:::${HelloWorldRoot}/*'
+                        - !Sub 'arn:aws:s3:::${RootDirBucket}/*'
                       Action: 
                         - 's3:GetObject'
 
