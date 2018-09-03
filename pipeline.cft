@@ -46,6 +46,8 @@ Resources:
   # CodeBuild project and resources (S3 Bucket for build artifacts, Role, Project)
   BuildArtifactsBucket:
       Type: AWS::S3::Bucket
+  HelloWorldRoot:
+      Type: AWS::S3::Bucket  
   CodeBuildServiceRole:
       Type: AWS::IAM::Role
       Properties:
@@ -270,3 +272,33 @@ Resources:
                     OutputArtifacts:
                       - Name: !Sub '${ServiceName}Approach2ChangeSet'
                     RunOrder: 3
+  CfnUser:
+    Type: AWS::IAM::User
+    Properties:
+      Path: /
+      Policies:
+        - PolicyName: root
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cloudformation:DescribeStackResource
+                  - s3:GetObject
+                Resource: "*"
+  CfnKeys:
+    Type: AWS::IAM::AccessKey
+    Properties:
+      UserName: !Ref CfnUser
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      PolicyDocument:
+        Version: 2008-10-17
+        Statement:
+          Action:
+            - s3:GetObject
+          Effect: Allow
+          Resource: !Sub "arn:aws:s3:::${HelloWorldRoot}/*"
+          Principal:
+            AWS: !GetAtt CfnUser.Arn
+      Bucket: !Ref HelloWorldRoot
