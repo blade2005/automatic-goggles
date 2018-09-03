@@ -334,6 +334,7 @@ Resources:
                   - 'socket = /var/run/%n/onica.sock'
                   - 'chmod-socket = 660'
                   - 'vacuum = true'
+                  - 'pidfile = /var/run/%n/onica.pid'
                   - ''
                   - 'die-on-term = true'
                   - 'workdir = /opt/onica-hello-world'
@@ -420,6 +421,7 @@ Resources:
               onica:
                 enabled: true
                 ensureRunning: true
+                files: /opt/onica-hello-world/onica.ini
           commands:
             01_make_exec:
               command: chmod +x /etc/init.d/onica
