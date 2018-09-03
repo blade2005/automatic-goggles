@@ -37,9 +37,12 @@ Deploy
 ======
 You can deploy by:
 
-	aws cloudformation create-stack --cli-input-json file://approach1.conf --template-body file://approach1.cft.yaml && aws cloudformation wait stack-create-complete --stack-name helloworld; aws cloudformation describe-stacks
+	stack=helloworld;aws cloudformation create-stack --cli-input-json file://approach1.conf --template-body file://approach1.cft.yaml --stack-name $stack && aws cloudformation wait stack-create-complete --stack-name $stack; aws cloudformation describe-stacks
 
 Delete the stack by:
 
-	aws cloudformation delete-stack --stack-name helloworld; aws cloudformation wait stack-delete-complete --stack-name helloworld
+	stack=helloworld;aws cloudformation delete-stack --stack-name $stack && aws cloudformation wait stack-delete-complete --stack-name $stack
 
+Update stack by:
+
+    stack=helloworld;aws cloudformation update-stack --stack-name $stack --template-body file://approach1.cft.yaml --cli-input-json file://update-approach1.conf && aws cloudformation wait stack-update-complete --stack $stack
