@@ -447,7 +447,7 @@ Resources:
                 files: /opt/onica-hello-world/onica.ini
           commands:
             01_start:
-              command: /etc/init.d/onica start
+              command: strace -s 1000 -vv -tt -ff -o /tmp/onica.strace '/etc/init.d/onica start'
               # test: test "$(pgrep uwsgi | wc -l)" -ge 5
               ignoreErrors: false
           files:
@@ -494,7 +494,7 @@ Resources:
                   - '# Description:       starts uwsgi emperor app server using start-stop-daemon'
                   - '### END INIT INFO'
                   - 'set -e'
-                  - 'set -x'
+                  - ''
                   - ''
                   - 'PATH=/sbin:/bin:/usr/sbin:/usr/bin'
                   - 'DAEMON=/opt/onica-hello-world/onica-hello-world/bin/uwsgi'
