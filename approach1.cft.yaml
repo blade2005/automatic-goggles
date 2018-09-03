@@ -331,7 +331,7 @@ Resources:
                   - 'master = true'
                   - 'processes = 5'
                   - ''
-                  - 'socket = /run/%n/onica.sock'
+                  - 'socket = /var/run/%n/onica.sock'
                   - 'chmod-socket = 660'
                   - 'vacuum = true'
                   - ''
@@ -402,7 +402,7 @@ Resources:
                   - "        access_log  /var/log/nginx/access.log;"
                   - "        error_log  /var/log/nginx/error.log;"
                   - "        location / {"
-                  - "            uwsgi_pass unix:/run/onica/onica.sock;"
+                  - "            uwsgi_pass unix:/var/run/onica/onica.sock;"
                   - "            include uwsgi_params;"
                   - "            proxy_redirect     off;"
                   - "            proxy_set_header   Host                 $host;"
