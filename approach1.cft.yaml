@@ -447,7 +447,7 @@ Resources:
                 files: /opt/onica-hello-world/onica.ini
           commands:
             01_start:
-              command: '/etc/init.d/onica start 2>&1 | tee /var/log/onica.debug'
+              command: /etc/init.d/onica start
               # test: test "$(pgrep uwsgi | wc -l)" -ge 5
               ignoreErrors: false
           files:
@@ -494,7 +494,7 @@ Resources:
                   - '# Description:       starts uwsgi emperor app server using start-stop-daemon'
                   - '### END INIT INFO'
                   - 'set -e'
-                  - ''
+                  - 'set -x'
                   - ''
                   - 'PATH=/sbin:/bin:/usr/sbin:/usr/bin'
                   - 'DAEMON=/opt/onica-hello-world/onica-hello-world/bin/uwsgi'
@@ -574,6 +574,7 @@ Resources:
                   - ''
                   - 'get_status()'
                   - '{'
+                  - '    echo Onica Status:'
                   - '    send_sig -10'
                   - '}'
                   - ''
