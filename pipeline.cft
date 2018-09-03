@@ -220,7 +220,7 @@ Resources:
                       ChangeSetName: !Sub '${ServiceName}-ChangeSet-Approach1'
                       TemplatePath: BuiltZip::approach1.yaml
                       Capabilities: CAPABILITY_IAM
-                      ParameterOverrides: !Sub '{ "InstanceType": "${InstanceType}", "OperatorEMail": "${OperatorEMail}", "KeyName": "${KeyName}", "SSHLocation": "${SSHLocation}" }'
+                      ParameterOverrides: !Sub '{ "InstanceType": "${InstanceType}", "OperatorEMail": "${OperatorEMail}", "KeyName": "${KeyName}", "SSHLocation": "${SSHLocation}", "CfnKey": "${CfnKeys}", "SecretAccessKey": "${CfnKeys.SecretAccessKey}", "BucketName": "${BucketName}" }'
 
                     InputArtifacts:
                       - Name: BuiltZip
