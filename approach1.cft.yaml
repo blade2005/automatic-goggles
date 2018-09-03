@@ -245,7 +245,13 @@ Resources:
     Metadata:
       Comment: Install a simple application
       AWS::CloudFormation::Init:
-        config:
+        configSets: 
+          default:
+            - baseinstall
+            - flaskpackage
+            - confignginx
+            - configuwsgi
+        baseinstall:
           packages:
             yum:
               curl: []
@@ -254,6 +260,45 @@ Resources:
               gcc: []
               nginx: []
               python36-virtualenv: []
+          files:
+            /etc/cfn/cfn-hup.conf:
+              content: !Join
+                - "\n"
+                - - "[main]"
+                  - !Sub "stack=${AWS::StackId}"
+                  - !Sub "region=${AWS::Region}"
+                  - ''
+              mode: '000400'
+              owner: root
+              group: root
+            /etc/cfn/hooks.d/cfn-auto-reloader.conf:
+              content: !Join
+                - "\n"
+                - - "[cfn-auto-reloader-hook]"
+                  - "triggers=post.update"
+                  - "path=Resources.LaunchConfig.Metadata.AWS::CloudFormation::Init"
+                  - !Sub "action=/opt/aws/bin/cfn-init -v ${AWS::StackName} --resource LaunchConfig --region ${AWS::Region}"
+                  - "runas=root"
+                  - ''
+          commands:
+            01_installpip:
+              command: curl https://bootstrap.pypa.io/get-pip.py | python3.6
+          services:
+            sysvinit:
+              cfn-hup:
+                enabled: true
+                ensureRunning: true
+                files: [/etc/cfn/cfn-hup.conf, /etc/cfn/hooks.d/cfn-auto-reloader.conf]
+        flaskpackage:
+          commands:
+            02_createvirtualenv:
+              cwd: /opt/onica-hello-world
+              command: virtualenv onica-hello-world
+            03_installdepends:
+              command: source onica-hello-world/bin/activate && pip install uwsgi flask
+              cwd: /opt/onica-hello-world
+            04_fixperms:
+              command: "chown -R nginx: /opt/onica-hello-world"
           files:
             /opt/onica-hello-world/templates/hello.html:
               content: !Join
@@ -313,6 +358,72 @@ Resources:
                   - 'if __name__ == "__main__":'
                   - '    app.run(host="0.0.0.0")'
                   - ''
+        confignginx:
+          services:
+            sysvinit:
+              nginx:
+                enabled: true
+                ensureRunning: true
+          files:
+            /etc/nginx/nginx.conf:
+              content: !Join
+                - "\n"
+                - - "user nginx;"
+                  - "worker_processes auto;"
+                  - "error_log /var/log/nginx/error.log;"
+                  - "pid /run/nginx.pid;"
+                  - ""
+                  - "# Load dynamic modules. See /usr/share/nginx/README.dynamic."
+                  - "include /usr/share/nginx/modules/*.conf;"
+                  - ""
+                  - "events {"
+                  - "    worker_connections 1024;"
+                  - "}"
+                  - ""
+                  - "http {"
+                  - "    log_format  main  '$remote_addr - $remote_user [$time_local] \"$request\" '"
+                  - "                      '$status $body_bytes_sent \"$http_referer\" '"
+                  - "                      '\"$http_user_agent\" \"$http_x_forwarded_for\"';"
+                  - "    access_log  /var/log/nginx/access.log  main;"
+                  - "    sendfile            on;"
+                  - "    tcp_nopush          on;"
+                  - "    tcp_nodelay         on;"
+                  - "    keepalive_timeout   65;"
+                  - "    types_hash_max_size 2048;"
+                  - "    include             /etc/nginx/mime.types;"
+                  - "    default_type        application/octet-stream;"
+                  - "    # Load modular configuration files from the /etc/nginx/conf.d directory."
+                  - "    # See http://nginx.org/en/docs/ngx_core_module.html#include"
+                  - "    # for more information."
+                  - "    include /etc/nginx/conf.d/*.conf;"
+                  - "    server {"
+                  - "        listen 80;"
+                  - "        server_name _;"
+                  - "        access_log  /var/log/nginx/access.log;"
+                  - "        error_log  /var/log/nginx/error.log;"
+                  - "        location / {"
+                  - "            uwsgi_pass unix:/run/onica/onica.sock;"
+                  - "            include uwsgi_params;"
+                  - "            proxy_redirect     off;"
+                  - "            proxy_set_header   Host                 $host;"
+                  - "            proxy_set_header   X-Real-IP            $remote_addr;"
+                  - "            proxy_set_header   X-Forwarded-For      $proxy_add_x_forwarded_for;"
+                  - "            proxy_set_header   X-Forwarded-Proto    $scheme;"
+                  - "        }"
+                  - "        include /etc/nginx/default.d/*.conf;"
+                  - "    }"
+                  - " }"
+                  - ''
+        configuwsgi:
+          services:
+            sysvinit:
+              onica:
+                enabled: true
+                ensureRunning: true
+          commands:
+            01_make_exec:
+              command: chmod +x /etc/init.d/onica
+          files:
             # /etc/systemd/system/onica.service:
             #   content: !Join
             #     - "\n"
@@ -472,99 +583,6 @@ Resources:
                   - '        ;;'
                   - 'esac'
                   - 'exit 0'
-            /etc/nginx/nginx.conf:
-              content: !Join
-                - "\n"
-                - - "user nginx;"
-                  - "worker_processes auto;"
-                  - "error_log /var/log/nginx/error.log;"
-                  - "pid /run/nginx.pid;"
-                  - ""
-                  - "# Load dynamic modules. See /usr/share/nginx/README.dynamic."
-                  - "include /usr/share/nginx/modules/*.conf;"
-                  - ""
-                  - "events {"
-                  - "    worker_connections 1024;"
-                  - "}"
-                  - ""
-                  - "http {"
-                  - "    log_format  main  '$remote_addr - $remote_user [$time_local] \"$request\" '"
-                  - "                      '$status $body_bytes_sent \"$http_referer\" '"
-                  - "                      '\"$http_user_agent\" \"$http_x_forwarded_for\"';"
-                  - "    access_log  /var/log/nginx/access.log  main;"
-                  - "    sendfile            on;"
-                  - "    tcp_nopush          on;"
-                  - "    tcp_nodelay         on;"
-                  - "    keepalive_timeout   65;"
-                  - "    types_hash_max_size 2048;"
-                  - "    include             /etc/nginx/mime.types;"
-                  - "    default_type        application/octet-stream;"
-                  - "    # Load modular configuration files from the /etc/nginx/conf.d directory."
-                  - "    # See http://nginx.org/en/docs/ngx_core_module.html#include"
-                  - "    # for more information."
-                  - "    include /etc/nginx/conf.d/*.conf;"
-                  - "    server {"
-                  - "        listen 80;"
-                  - "        server_name _;"
-                  - "        access_log  /var/log/nginx/access.log;"
-                  - "        error_log  /var/log/nginx/error.log;"
-                  - "        location / {"
-                  - "            uwsgi_pass unix:/run/onica/onica.sock;"
-                  - "            include uwsgi_params;"
-                  - "            proxy_redirect     off;"
-                  - "            proxy_set_header   Host                 $host;"
-                  - "            proxy_set_header   X-Real-IP            $remote_addr;"
-                  - "            proxy_set_header   X-Forwarded-For      $proxy_add_x_forwarded_for;"
-                  - "            proxy_set_header   X-Forwarded-Proto    $scheme;"
-                  - "        }"
-                  - "        include /etc/nginx/default.d/*.conf;"
-                  - "    }"
-                  - " }"
-                  - ''
-            /etc/cfn/cfn-hup.conf:
-              content: !Join
-                - "\n"
-                - - "[main]"
-                  - !Sub "stack=${AWS::StackId}"
-                  - !Sub "region=${AWS::Region}"
-                  - ''
-              mode: '000400'
-              owner: root
-              group: root
-            /etc/cfn/hooks.d/cfn-auto-reloader.conf:
-              content: !Join
-                - "\n"
-                - - "[cfn-auto-reloader-hook]"
-                  - "triggers=post.update"
-                  - "path=Resources.LaunchConfig.Metadata.AWS::CloudFormation::Init"
-                  - !Sub "action=/opt/aws/bin/cfn-init -v ${AWS::StackName} --resource LaunchConfig --region ${AWS::Region}"
-                  - "runas=root"
-                  - ''
-          # sources:
-          #   /: !Sub "https://${RootDirBucket}.s3.amazonaws.com/onica-helloworld.tar.gz"
-          commands:
-            01_installpip:
-              command: curl https://bootstrap.pypa.io/get-pip.py | python3.6
-            02_createvirtualenv:
-              cwd: /opt/onica-hello-world
-              command: virtualenv onica-hello-world
-            03_installdepends:
-              command: source onica-hello-world/bin/activate && pip install uwsgi flask
-              cwd: /opt/onica-hello-world
-            04_fixperms:
-              command: "chown -R nginx: /opt/onica-hello-world"
-          services:
-            sysvinit:
-              nginx:
-                enabled: true
-                ensureRunning: true
-              onica:
-                enabled: true
-                ensureRunning: true
-              cfn-hup:
-                enabled: true
-                ensureRunning: true
-                files: [/etc/cfn/cfn-hup.conf, /etc/cfn/hooks.d/cfn-auto-reloader.conf]
     Properties:
       AssociatePublicIpAddress: True
       KeyName: !Ref 'KeyName'
