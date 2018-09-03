@@ -355,6 +355,7 @@ Resources:
                   - 'workdir = /opt/onica-hello-world'
                   - 'processes = 4'
                   - 'threads = 2'
+                  - 'daemonize = true'
                   - ''
             /opt/onica-hello-world/onica.py:
               content: !Join
@@ -438,10 +439,9 @@ Resources:
                 ensureRunning: true
                 files: /opt/onica-hello-world/onica.ini
           commands:
-            01_make_exec:
-              command: chmod +x /etc/init.d/onica
-            02_start:
+            01_start:
               command: /etc/init.d/onica start
+              test: test "$(pgrep uwsgi | wc -l)" -ge 5
           files:
             # /etc/systemd/system/onica.service:
             #   content: !Join
@@ -469,6 +469,9 @@ Resources:
             #       - "WantedBy=multi-user.target"
             #       - ''
             /etc/init.d/onica:
+              mode: 000744
+              owner: root
+              group: root
               content: !Join
                 - "\n"
                 - - '#!/usr/bin/env bash'
