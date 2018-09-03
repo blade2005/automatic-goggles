@@ -447,8 +447,8 @@ Resources:
                 files: /opt/onica-hello-world/onica.ini
           commands:
             01_start:
-              command: /etc/init.d/onica start 2>&1 | tee /var/log/onica.debug
-              test: test "$(pgrep uwsgi | wc -l)" -ge 5
+              command: '/etc/init.d/onica start 2>&1 | tee /var/log/onica.debug'
+              # test: test "$(pgrep uwsgi | wc -l)" -ge 5
               ignoreErrors: false
           files:
             # /etc/systemd/system/onica.service:
