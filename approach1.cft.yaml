@@ -42,8 +42,6 @@ Parameters:
     ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
 Mappings:
   AWSInstanceType2Arch:
-    t1.micro:
-      Arch: PV64
     t2.nano:
       Arch: HVM64
     t2.micro:
@@ -53,28 +51,6 @@ Mappings:
     t2.medium:
       Arch: HVM64
     t2.large:
-      Arch: HVM64
-    m1.small:
-      Arch: PV64
-    m1.medium:
-      Arch: PV64
-    m1.large:
-      Arch: PV64
-    m1.xlarge:
-      Arch: PV64
-    m2.xlarge:
-      Arch: PV64
-    m2.2xlarge:
-      Arch: PV64
-    m2.4xlarge:
-      Arch: PV64
-    m3.medium:
-      Arch: HVM64
-    m3.large:
-      Arch: HVM64
-    m3.xlarge:
-      Arch: HVM64
-    m3.2xlarge:
       Arch: HVM64
     m4.large:
       Arch: HVM64
@@ -86,20 +62,6 @@ Mappings:
       Arch: HVM64
     m4.10xlarge:
       Arch: HVM64
-    c1.medium:
-      Arch: PV64
-    c1.xlarge:
-      Arch: PV64
-    c3.large:
-      Arch: HVM64
-    c3.xlarge:
-      Arch: HVM64
-    c3.2xlarge:
-      Arch: HVM64
-    c3.4xlarge:
-      Arch: HVM64
-    c3.8xlarge:
-      Arch: HVM64
     c4.large:
       Arch: HVM64
     c4.xlarge:
@@ -110,10 +72,6 @@ Mappings:
       Arch: HVM64
     c4.8xlarge:
       Arch: HVM64
-    g2.2xlarge:
-      Arch: HVMG2
-    g2.8xlarge:
-      Arch: HVMG2
     r3.large:
       Arch: HVM64
     r3.xlarge:
@@ -149,58 +107,64 @@ Mappings:
     cc2.8xlarge:
       Arch: HVM64
   AWSRegionArch2AMI:
-    us-east-1:
-      PV64: ami-2a69aa47
-      HVM64: ami-6869aa05
-      HVMG2: ami-50b4f047
-    us-west-2:
-      PV64: ami-7f77b31f
-      HVM64: ami-7172b611
-      HVMG2: ami-002bf460
-    us-west-1:
-      PV64: ami-a2490dc2
-      HVM64: ami-31490d51
-      HVMG2: ami-699ad409
-    eu-west-1:
-      PV64: ami-4cdd453f
-      HVM64: ami-f9dd458a
-      HVMG2: ami-f0e0a483
-    eu-central-1:
-      PV64: ami-6527cf0a
-      HVM64: ami-ea26ce85
-      HVMG2: ami-d9d62ab6
     ap-northeast-1:
-      PV64: ami-3e42b65f
-      HVM64: ami-374db956
-      HVMG2: ami-78ba6619
+      HVM64:
+        ami-0957b42d2e60d8654
     ap-northeast-2:
-      PV64: NOT_SUPPORTED
-      HVM64: ami-2b408b45
-      HVMG2: NOT_SUPPORTED
-    ap-southeast-1:
-      PV64: ami-df9e4cbc
-      HVM64: ami-a59b49c6
-      HVMG2: ami-56e84c35
-    ap-southeast-2:
-      PV64: ami-63351d00
-      HVM64: ami-dc361ebf
-      HVMG2: ami-2589b946
+      HVM64:
+        ami-0c5cc56ce20a39938
+    ap-northeast-3:
+      HVM64:
+        ami-0c376da6d144c5890
     ap-south-1:
-      PV64: NOT_SUPPORTED
-      HVM64: ami-ffbdd790
-      HVMG2: ami-f7354198
-    us-east-2:
-      PV64: NOT_SUPPORTED
-      HVM64: ami-f6035893
-      HVMG2: NOT_SUPPORTED
-    sa-east-1:
-      PV64: ami-1ad34676
-      HVM64: ami-6dd04501
-      HVMG2: NOT_SUPPORTED
+      HVM64:
+        ami-0a6bfb6ec493fec48
+    ap-southeast-1:
+      HVM64:
+        ami-00cc30e1735b3268b
+    ap-southeast-2:
+      HVM64:
+        ami-0b1a7767bce29a01a
+    ca-central-1:
+      HVM64:
+        ami-cd1b96a9
     cn-north-1:
-      PV64: ami-77559f1a
-      HVM64: ami-8e6aa0e3
-      HVMG2: NOT_SUPPORTED
+      HVM64:
+        ami-9906def4
+    cn-northwest-1:
+      HVM64:
+        ami-bc6a7dde
+    eu-central-1:
+      HVM64:
+        ami-0bfa8b98c4ff06eed
+    eu-west-1:
+      HVM64:
+        ami-020d43be7e7841de4
+    eu-west-2:
+      HVM64:
+        ami-8f7481e8
+    eu-west-3:
+      HVM64:
+        ami-06879bb67c688e7eb
+    sa-east-1:
+      HVM64:
+        ami-0f57b63a449295354
+    us-east-1:
+      HVM64:
+        ami-00b94673edfccb7ca
+    us-east-2:
+      HVM64:
+        ami-05ea59e90e2c10a56
+    us-gov-west-1:
+      HVM64:
+        ami-ea7be78b
+    us-west-1:
+      HVM64:
+        ami-02b2f7285ba6579ed
+    us-west-2:
+      HVM64:
+        ami-99dafbe1
+
 Resources:
   VPC:
     Type: AWS::EC2::VPC
