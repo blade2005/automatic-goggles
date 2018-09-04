@@ -316,11 +316,20 @@ Resources:
                   - ''
                   - 'master = true'
                   - 'processes = 5'
+                  - 'need-app = true'
                   - ''
-                  - 'socket = /var/run/%n/onica.sock'
-                  - 'chmod-socket = 660'
-                  - 'vacuum = true'
                   - 'pidfile = /var/run/%n/onica.pid'
+                  - 'socket = /var/run/%n/onica.sock'
+                  # - 'chmod-socket = 660'
+                  # - 'chown-socket = true'
+                  - 'vacuum = true'
+                  - ''
+                  # - 'log-reopen = true'
+                  # - 'logto = /var/log/onica/onica.log'
+                  # - 'log-syslog = true'
+                  - ''
+                  # - 'uid = nginx'
+                  # - 'gid = nginx'
                   - ''
                   - 'die-on-term = true'
                   - 'workdir = /opt/onica-hello-world'
@@ -423,7 +432,7 @@ Resources:
               content: !Join
                 - "\n"
                 - - "[Unit]"
-                  - "Description=uWSGI Emperor"
+                  - "Description=uWSGI"
                   - "After=syslog.target"
                   - "Requires=nginx"
                   - "After=nginx.service"
@@ -431,6 +440,8 @@ Resources:
                   - "[Service]"
                   - "User=nginx"
                   - "Group=nginx"
+                  - "ExecStartPre=-/usr/bin/mkdir /var/run/onica"
+                  - "ExecStartPre=-/usr/bin/chown -R nginx: /var/run/onica"
                   - "ExecStart=/opt/onica-hello-world/onica-hello-world/bin/uwsgi --ini /opt/onica-hello-world/onica.ini"
                   - "# Requires systemd version 211 or newer"
                   - "RuntimeDirectory=onica"
@@ -590,7 +601,7 @@ Resources:
           - yum update -y aws-cfn-bootstrap
           - !Sub '/opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource LaunchConfig --region ${AWS::Region}'
           - !Sub '/opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource WebServerGroup --region ${AWS::Region}'
-          - 'echo "Version 0.0.19'
+          - 'echo "Version 0.0.20'
           - ''
   WebServerScaleUpPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
