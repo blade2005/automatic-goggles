@@ -14,14 +14,12 @@ Parameters:
     Description: WebServer EC2 instance type
     Type: String
     Default: t2.small
-    AllowedValues: [t1.micro, t2.nano, t2.micro, t2.small, t2.medium, t2.large, m1.small,
-      m1.medium, m1.large, m1.xlarge, m2.xlarge, m2.2xlarge, m2.4xlarge, m3.medium,
-      m3.large, m3.xlarge, m3.2xlarge, m4.large, m4.xlarge, m4.2xlarge, m4.4xlarge,
-      m4.10xlarge, c1.medium, c1.xlarge, c3.large, c3.xlarge, c3.2xlarge, c3.4xlarge,
-      c3.8xlarge, c4.large, c4.xlarge, c4.2xlarge, c4.4xlarge, c4.8xlarge, g2.2xlarge,
-      g2.8xlarge, r3.large, r3.xlarge, r3.2xlarge, r3.4xlarge, r3.8xlarge, i2.xlarge,
-      i2.2xlarge, i2.4xlarge, i2.8xlarge, d2.xlarge, d2.2xlarge, d2.4xlarge, d2.8xlarge,
-      hi1.4xlarge, hs1.8xlarge, cr1.8xlarge, cc2.8xlarge, cg1.4xlarge]
+    AllowedValues: [c4.2xlarge, c4.4xlarge, c4.8xlarge, c4.large, c4.xlarge, cc2.8xlarge,
+                    cr1.8xlarge, d2.2xlarge, d2.4xlarge, d2.8xlarge, d2.xlarge, hi1.4xlarge,
+                    hs1.8xlarge, i2.2xlarge, i2.4xlarge, i2.8xlarge, i2.xlarge, m4.10xlarge,
+                    m4.2xlarge, m4.4xlarge, m4.large, m4.xlarge, r3.2xlarge, r3.4xlarge,
+                    r3.8xlarge, r3.large, r3.xlarge, t2.large, t2.medium, t2.micro,
+                    t2.nano, t2.small]
     ConstraintDescription: must be a valid EC2 instance type.
   OperatorEMail:
     Description: EMail address to notify if there are any scaling operations
@@ -188,7 +186,7 @@ Resources:
     Type: AWS::SNS::Topic
     Properties:
       Subscription:
-      - Endpoint: !Ref 'OperatorEMail'
+      - Endpoint: !Ref OperatorEMail
         Protocol: email
   WebServerGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
@@ -198,11 +196,10 @@ Resources:
       LaunchConfigurationName: !Ref LaunchConfig
       MinSize: '1'
       MaxSize: '3'
-      LoadBalancerNames: [!Ref 'ElasticLoadBalancer']
       TargetGroupARNs:
         - !Ref ALBTargetGroup
       NotificationConfigurations:
-        - TopicARN: !Ref 'NotificationTopic'
+        - TopicARN: !Ref NotificationTopic
           NotificationTypes: ['autoscaling:EC2_INSTANCE_LAUNCH', 'autoscaling:EC2_INSTANCE_LAUNCH_ERROR',
             'autoscaling:EC2_INSTANCE_TERMINATE', 'autoscaling:EC2_INSTANCE_TERMINATE_ERROR']
     CreationPolicy:
@@ -414,171 +411,171 @@ Resources:
                 enabled: true
                 ensureRunning: true
                 files: /opt/onica-hello-world/onica.ini
-          commands:
-            01_start:
-              command: /etc/init.d/onica start
-            02_start:
-              command: /etc/init.d/onica start
-              # test: test "$(pgrep uwsgi | wc -l)" -ge 5
-              # ignoreErrors: true
+          # commands:
+          #   01_start:
+          #     command: /etc/init.d/onica start
+          #   02_start:
+          #     command: /etc/init.d/onica start
+          #     # test: test "$(pgrep uwsgi | wc -l)" -ge 5
+          #     # ignoreErrors: true
           files:
-            # /etc/systemd/system/onica.service:
-            #   content: !Join
-            #     - "\n"
-            #     - - "[Unit]"
-            #       - "Description=uWSGI Emperor"
-            #       - "After=syslog.target"
-            #       - "Requires=nginx"
-            #       - "After=nginx.service"
-            #       - ""
-            #       - "[Service]"
-            #       - "User=nginx"
-            #       - "Group=nginx"
-            #       - "ExecStart=/opt/onica-hello-world/onica-hello-world/bin/uwsgi --ini /opt/onica-hello-world/onica.ini"
-            #       - "# Requires systemd version 211 or newer"
-            #       - "RuntimeDirectory=onica"
-            #       - "WorkingDirectory=/opt/onica-hello-world"
-            #       - "Restart=always"
-            #       - "KillSignal=SIGQUIT"
-            #       - "Type=notify"
-            #       - "StandardError=syslog"
-            #       - "NotifyAccess=all"
-            #       - ""
-            #       - "[Install]"
-            #       - "WantedBy=multi-user.target"
-            #       - ''
-            /etc/init.d/onica:
-              mode: '000744'
-              owner: root
-              group: root
+            /etc/systemd/system/onica.service:
               content: !Join
                 - "\n"
-                - - '#!/usr/bin/env bash'
+                - - "[Unit]"
+                  - "Description=uWSGI Emperor"
+                  - "After=syslog.target"
+                  - "Requires=nginx"
+                  - "After=nginx.service"
+                  - ""
+                  - "[Service]"
+                  - "User=nginx"
+                  - "Group=nginx"
+                  - "ExecStart=/opt/onica-hello-world/onica-hello-world/bin/uwsgi --ini /opt/onica-hello-world/onica.ini"
+                  - "# Requires systemd version 211 or newer"
+                  - "RuntimeDirectory=onica"
+                  - "WorkingDirectory=/opt/onica-hello-world"
+                  - "Restart=always"
+                  - "KillSignal=SIGQUIT"
+                  - "Type=notify"
+                  - "StandardError=syslog"
+                  - "NotifyAccess=all"
+                  - ""
+                  - "[Install]"
+                  - "WantedBy=multi-user.target"
                   - ''
-                  - '### BEGIN INIT INFO'
-                  - '# Provides:          uwsgi-emperor'
-                  - '# Required-Start:    $all'
-                  - '# Required-Stop:     $all'
-                  - '# Default-Start:     2 3 4 5'
-                  - '# Default-Stop:      0 1 6'
-                  - '# Short-Description: starts the uwsgi emperor app server'
-                  - '# Description:       starts uwsgi emperor app server using start-stop-daemon'
-                  - '### END INIT INFO'
-                  - 'set -e'
-                  - ''
-                  - 'PATH=/sbin:/bin:/usr/sbin:/usr/bin'
-                  - 'DAEMON=/opt/onica-hello-world/onica-hello-world/bin/uwsgi'
-                  - 'RUN_DIR=/var/run/onica'
-                  - 'LOG_DIR=/var/log/onica'
-                  - 'WORK_DIR=/opt/onica-hello-world'
-                  - 'NAME=onica'
-                  - 'DESC=onica'
-                  - 'OWNER=nginx'
-                  - 'GROUP=nginx'
-                  - ''
-                  - '[[ -x $DAEMON ]] || exit 0'
-                  - '[[ -d $RUN_DIR ]] || mkdir $RUN_DIR && chown $OWNER:$GROUP $RUN_DIR'
-                  - '[[ -d $LOG_DIR ]] || mkdir $LOG_DIR && chown $OWNER:$GROUP $LOG_DIR'
-                  - ''
-                  - 'PIDFILE=$RUN_DIR/$NAME.pid'
-                  - ''
-                  - 'do_pid_check()'
-                  - '{'
-                  - '    local PIDFILE=$1'
-                  - '    [[ -f $PIDFILE ]] || return 0'
-                  - '    local PID=$(cat $PIDFILE)'
-                  - '    for p in $(pgrep $NAME); do'
-                  - '        [[ $p == $PID ]] && return 1'
-                  - '    done'
-                  - '    return 0'
-                  - '}'
-                  - ''
-                  - 'do_start()'
-                  - '{'
-                  - '    local PIDFILE=$RUN_DIR/$NAME.pid'
-                  - '    local START_OPTS=" \'
-                  - '        --ini /opt/onica-hello-world/onica.ini'
-                  - '        --pidfile $PIDFILE \'
-                  - '        --uid $OWNER \'
-                  - '        --gid $GROUP \'
-                  - '        --daemonize $LOG_DIR/onica.log"'
-                  - '    if do_pid_check $PIDFILE; then'
-                  - '        cd $WORK_DIR'
-                  - '        $DAEMON $START_OPTS'
-                  - '    else'
-                  - '        echo "Already running!"'
-                  - '    fi'
-                  - '}'
-                  - ''
-                  - 'wait_and_clean_pidfile()'
-                  - '{'
-                  - '    local PIDFILE=$RUN_DIR/$NAME.pid'
-                  - '    until do_pid_check $PIDFILE; do'
-                  - '        echo -n "";'
-                  - '    done'
-                  - '    rm -f $PIDFILE'
-                  - '}'
-                  - ''
-                  - 'do_stop()'
-                  - '{'
-                  - '    kill -s SIGINT $(cat $PIDFILE)'
-                  - '    wait_and_clean_pidfile'
-                  - '}'
-                  - ''
-                  - 'do_reload()'
-                  - '{'
-                  - '    kill -s SIGHUP $(cat $PIDFILE)'
-                  - '}'
-                  - ''
-                  - 'do_force_reload()'
-                  - '{'
-                  - '    kill -s SIGTERM $(cat $PIDFILE)'
-                  - '}'
-                  - ''
-                  - 'get_status()'
-                  - '{'
-                  - '    echo Onica Status:'
-                  - '    kill -s SIGUSR1 $(cat $PIDFILE)'
-                  - '}'
-                  - ''
-                  - 'case "$1" in'
-                  - '    start)'
-                  - '        echo "Starting $DESC: "'
-                  - '        do_start'
-                  - '        echo "$NAME."'
-                  - '        ;;'
-                  - '    stop)'
-                  - '        echo -n "Stopping $DESC: "'
-                  - '        do_stop'
-                  - '        echo "$NAME."'
-                  - '        ;;'
-                  - '    reload)'
-                  - '        echo -n "Reloading $DESC: "'
-                  - '        do_reload'
-                  - '        echo "$NAME."'
-                  - '        ;;'
-                  - '    force-reload)'
-                  - '        echo -n "Force-reloading $DESC: "'
-                  - '        do_force_reload'
-                  - '        echo "$NAME."'
-                  - '       ;;'
-                  - '    restart)'
-                  - '        echo  "Restarting $DESC: "'
-                  - '        do_stop'
-                  - '        sleep 1'
-                  - '        do_start'
-                  - '        echo "$NAME."'
-                  - '        ;;'
-                  - '    status)'
-                  - '        get_status'
-                  - '        ;;'
-                  - '    *)'
-                  - '        N=/etc/init.d/$NAME'
-                  - '        echo "Usage: $N {start|stop|restart|reload|force-reload|status}">&2'
-                  - '        exit 1'
-                  - '        ;;'
-                  - 'esac'
-                  - 'exit 0'
+            # /etc/init.d/onica:
+            #   mode: '000744'
+            #   owner: root
+            #   group: root
+            #   content: !Join
+            #     - "\n"
+            #     - - '#!/usr/bin/env bash'
+            #       - ''
+            #       - '### BEGIN INIT INFO'
+            #       - '# Provides:          uwsgi-emperor'
+            #       - '# Required-Start:    $all'
+            #       - '# Required-Stop:     $all'
+            #       - '# Default-Start:     2 3 4 5'
+            #       - '# Default-Stop:      0 1 6'
+            #       - '# Short-Description: starts the uwsgi emperor app server'
+            #       - '# Description:       starts uwsgi emperor app server using start-stop-daemon'
+            #       - '### END INIT INFO'
+            #       - 'set -e'
+            #       - ''
+            #       - 'PATH=/sbin:/bin:/usr/sbin:/usr/bin'
+            #       - 'DAEMON=/opt/onica-hello-world/onica-hello-world/bin/uwsgi'
+            #       - 'RUN_DIR=/var/run/onica'
+            #       - 'LOG_DIR=/var/log/onica'
+            #       - 'WORK_DIR=/opt/onica-hello-world'
+            #       - 'NAME=onica'
+            #       - 'DESC=onica'
+            #       - 'OWNER=nginx'
+            #       - 'GROUP=nginx'
+            #       - ''
+            #       - '[[ -x $DAEMON ]] || exit 0'
+            #       - '[[ -d $RUN_DIR ]] || mkdir $RUN_DIR && chown $OWNER:$GROUP $RUN_DIR'
+            #       - '[[ -d $LOG_DIR ]] || mkdir $LOG_DIR && chown $OWNER:$GROUP $LOG_DIR'
+            #       - ''
+            #       - 'PIDFILE=$RUN_DIR/$NAME.pid'
+            #       - ''
+            #       - 'do_pid_check()'
+            #       - '{'
+            #       - '    local PIDFILE=$1'
+            #       - '    [[ -f $PIDFILE ]] || return 0'
+            #       - '    local PID=$(cat $PIDFILE)'
+            #       - '    for p in $(pgrep $NAME); do'
+            #       - '        [[ $p == $PID ]] && return 1'
+            #       - '    done'
+            #       - '    return 0'
+            #       - '}'
+            #       - ''
+            #       - 'do_start()'
+            #       - '{'
+            #       - '    local PIDFILE=$RUN_DIR/$NAME.pid'
+            #       - '    local START_OPTS=" \'
+            #       - '        --ini /opt/onica-hello-world/onica.ini'
+            #       - '        --pidfile $PIDFILE \'
+            #       - '        --uid $OWNER \'
+            #       - '        --gid $GROUP \'
+            #       - '        --daemonize $LOG_DIR/onica.log"'
+            #       - '    if do_pid_check $PIDFILE; then'
+            #       - '        cd $WORK_DIR'
+            #       - '        $DAEMON $START_OPTS'
+            #       - '    else'
+            #       - '        echo "Already running!"'
+            #       - '    fi'
+            #       - '}'
+            #       - ''
+            #       - 'wait_and_clean_pidfile()'
+            #       - '{'
+            #       - '    local PIDFILE=$RUN_DIR/$NAME.pid'
+            #       - '    until do_pid_check $PIDFILE; do'
+            #       - '        echo -n "";'
+            #       - '    done'
+            #       - '    rm -f $PIDFILE'
+            #       - '}'
+            #       - ''
+            #       - 'do_stop()'
+            #       - '{'
+            #       - '    kill -s SIGINT $(cat $PIDFILE)'
+            #       - '    wait_and_clean_pidfile'
+            #       - '}'
+            #       - ''
+            #       - 'do_reload()'
+            #       - '{'
+            #       - '    kill -s SIGHUP $(cat $PIDFILE)'
+            #       - '}'
+            #       - ''
+            #       - 'do_force_reload()'
+            #       - '{'
+            #       - '    kill -s SIGTERM $(cat $PIDFILE)'
+            #       - '}'
+            #       - ''
+            #       - 'get_status()'
+            #       - '{'
+            #       - '    echo Onica Status:'
+            #       - '    kill -s SIGUSR1 $(cat $PIDFILE)'
+            #       - '}'
+            #       - ''
+            #       - 'case "$1" in'
+            #       - '    start)'
+            #       - '        echo "Starting $DESC: "'
+            #       - '        do_start'
+            #       - '        echo "$NAME."'
+            #       - '        ;;'
+            #       - '    stop)'
+            #       - '        echo -n "Stopping $DESC: "'
+            #       - '        do_stop'
+            #       - '        echo "$NAME."'
+            #       - '        ;;'
+            #       - '    reload)'
+            #       - '        echo -n "Reloading $DESC: "'
+            #       - '        do_reload'
+            #       - '        echo "$NAME."'
+            #       - '        ;;'
+            #       - '    force-reload)'
+            #       - '        echo -n "Force-reloading $DESC: "'
+            #       - '        do_force_reload'
+            #       - '        echo "$NAME."'
+            #       - '       ;;'
+            #       - '    restart)'
+            #       - '        echo  "Restarting $DESC: "'
+            #       - '        do_stop'
+            #       - '        sleep 1'
+            #       - '        do_start'
+            #       - '        echo "$NAME."'
+            #       - '        ;;'
+            #       - '    status)'
+            #       - '        get_status'
+            #       - '        ;;'
+            #       - '    *)'
+            #       - '        N=/etc/init.d/$NAME'
+            #       - '        echo "Usage: $N {start|stop|restart|reload|force-reload|status}">&2'
+            #       - '        exit 1'
+            #       - '        ;;'
+            #       - 'esac'
+            #       - 'exit 0'
     Properties:
       AssociatePublicIpAddress: True
       KeyName: !Ref 'KeyName'
@@ -593,7 +590,7 @@ Resources:
           - yum update -y aws-cfn-bootstrap
           - !Sub '/opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource LaunchConfig --region ${AWS::Region}'
           - !Sub '/opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource WebServerGroup --region ${AWS::Region}'
-          - 'echo "Version 0.0.18'
+          - 'echo "Version 0.0.19'
           - ''
   WebServerScaleUpPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
@@ -639,22 +636,22 @@ Resources:
       - Name: AutoScalingGroupName
         Value: !Ref 'WebServerGroup'
       ComparisonOperator: LessThanThreshold
-  ElasticLoadBalancer:
-    Type: 'AWS::ElasticLoadBalancingV2::LoadBalancer'
+  ApplicationLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       SecurityGroups: [!Ref ELBSG]
       Subnets: [!Ref PublicSubnetA, !Ref PublicSubnetB]
   ALBListener:
-    Type: 'AWS::ElasticLoadBalancingV2::Listener'
+    Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
       DefaultActions:
         - Type: forward
           TargetGroupArn: !Ref ALBTargetGroup
-      LoadBalancerArn: !Ref ElasticLoadBalancer
+      LoadBalancerArn: !Ref ApplicationLoadBalancer
       Port: '80'
       Protocol: HTTP
   ALBTargetGroup:
-    Type: 'AWS::ElasticLoadBalancingV2::TargetGroup'
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckPath: /
       HealthCheckIntervalSeconds: 10
@@ -731,4 +728,4 @@ Outputs:
     Description: The URL of the website
     Value: !Sub
       - 'http://${domain}'
-      - { domain: !GetAtt ElasticLoadBalancer.DNSName }
+      - { domain: !GetAtt ApplicationLoadBalancer.DNSName }
