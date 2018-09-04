@@ -335,7 +335,7 @@ Resources:
                   - 'workdir = /opt/onica-hello-world'
                   - 'processes = 4'
                   - 'threads = 2'
-                  - 'daemonize = true'
+                  # - 'daemonize = true'
                   - ''
             /opt/onica-hello-world/onica.py:
               owner: nginx
@@ -440,8 +440,12 @@ Resources:
                   - "[Service]"
                   - "User=nginx"
                   - "Group=nginx"
-                  - "ExecStartPre=-/usr/bin/mkdir /var/run/onica"
-                  - "ExecStartPre=-/usr/bin/chown -R nginx: /var/run/onica"
+                  - "PIDFile=/var/run/onica/onica.pid"
+                  - "ExecStartPre=-test -d /var/run/onica || /bin/mkdir /var/run/onica"
+                  - "ExecStartPre=-test -d /var/log/onica || /bin/mkdir /var/log/onica"
+                  - "ExecStartPre=-/bin/chown -R nginx: /var/run/onica"
+                  - "ExecStartPre=-/bin/chown -R nginx: /var/log/onica"
+                  - "ExecStartPre=-touch /var/run/onica/onica.pid"
                   - "ExecStart=/opt/onica-hello-world/onica-hello-world/bin/uwsgi --ini /opt/onica-hello-world/onica.ini"
                   - "# Requires systemd version 211 or newer"
                   - "RuntimeDirectory=onica"
