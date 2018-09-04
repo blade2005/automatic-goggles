@@ -199,6 +199,8 @@ Resources:
       MinSize: '1'
       MaxSize: '3'
       LoadBalancerNames: [!Ref 'ElasticLoadBalancer']
+      TargetGroupARNs:
+        - !Ref ALBTargetGroup
       NotificationConfigurations:
         - TopicARN: !Ref 'NotificationTopic'
           NotificationTypes: ['autoscaling:EC2_INSTANCE_LAUNCH', 'autoscaling:EC2_INSTANCE_LAUNCH_ERROR',
@@ -591,7 +593,7 @@ Resources:
           - yum update -y aws-cfn-bootstrap
           - !Sub '/opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource LaunchConfig --region ${AWS::Region}'
           - !Sub '/opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource WebServerGroup --region ${AWS::Region}'
-          - 'echo "Version 0.0.17'
+          - 'echo "Version 0.0.18'
           - ''
   WebServerScaleUpPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
@@ -638,21 +640,37 @@ Resources:
         Value: !Ref 'WebServerGroup'
       ComparisonOperator: LessThanThreshold
   ElasticLoadBalancer:
-    Type: AWS::ElasticLoadBalancing::LoadBalancer
+    Type: 'AWS::ElasticLoadBalancingV2::LoadBalancer'
     Properties:
       SecurityGroups: [!Ref ELBSG]
-      Subnets: [!Ref PublicSubnetB, !Ref PublicSubnetA ]
-      CrossZone: true
-      Listeners:
-      - LoadBalancerPort: '80'
-        InstancePort: '80'
-        Protocol: HTTP
-      HealthCheck:
-        Target: HTTP:80/
-        HealthyThreshold: '3'
-        UnhealthyThreshold: '5'
-        Interval: '30'
-        Timeout: '5'
+      Subnets: [!Ref PublicSubnetA, !Ref PublicSubnetB]
+  ALBListener:
+    Type: 'AWS::ElasticLoadBalancingV2::Listener'
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref ALBTargetGroup
+      LoadBalancerArn: !Ref ElasticLoadBalancer
+      Port: '80'
+      Protocol: HTTP
+  ALBTargetGroup:
+    Type: 'AWS::ElasticLoadBalancingV2::TargetGroup'
+    Properties:
+      HealthCheckPath: /
+      HealthCheckIntervalSeconds: 10
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      Port: 80
+      Protocol: HTTP
+      UnhealthyThresholdCount: 5
+      VpcId: !Ref VPC
+      TargetGroupAttributes:
+        - Key: stickiness.enabled
+          Value: 'true'
+        - Key: stickiness.type
+          Value: lb_cookie
+        - Key: stickiness.lb_cookie.duration_seconds
+          Value: '30'
   ELBSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
