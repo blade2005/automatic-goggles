@@ -234,11 +234,10 @@ Resources:
           packages:
             yum:
               curl: []
-              python36: []
-              python36-devel: []
+              python3: []
+              python3-pip: []
+              python3-devel: []
               gcc: []
-              nginx: []
-              python36-virtualenv: []
               strace: []
               screen: []
           files:
@@ -262,8 +261,10 @@ Resources:
                   - "runas=root"
                   - ''
           commands:
-            01_installpip:
-              command: curl https://bootstrap.pypa.io/get-pip.py | python3.6
+            02_installextras:
+              command: amazon-linux-extras install nginx1.12
+            01_installvirtualenv:
+              command: pip3.7 install virtualenv
           services:
             sysvinit:
               cfn-hup:
@@ -274,7 +275,7 @@ Resources:
           commands:
             02_createvirtualenv:
               cwd: /opt/onica-hello-world
-              command: virtualenv-3.6 onica-hello-world
+              command: /usr/local/bin/virtualenv onica-hello-world
             03_installdepends:
               command: /opt/onica-hello-world/onica-hello-world/bin/pip install uwsgi flask
             04_fixperms:
@@ -590,7 +591,7 @@ Resources:
           - yum update -y aws-cfn-bootstrap
           - !Sub '/opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource LaunchConfig --region ${AWS::Region}'
           - !Sub '/opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource WebServerGroup --region ${AWS::Region}'
-          - 'echo "Version 0.0.16'
+          - 'echo "Version 0.0.17'
           - ''
   WebServerScaleUpPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
