@@ -605,7 +605,7 @@ Resources:
           - yum update -y aws-cfn-bootstrap
           - !Sub '/opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource LaunchConfig --region ${AWS::Region}'
           - !Sub '/opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource WebServerGroup --region ${AWS::Region}'
-          - 'echo "Version 0.0.20'
+          - 'echo "Version 0.0.21'
           - ''
   WebServerScaleUpPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
