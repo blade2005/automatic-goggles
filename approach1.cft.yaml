@@ -333,8 +333,8 @@ Resources:
                   - ''
                   - 'die-on-term = true'
                   - 'workdir = /opt/onica-hello-world'
-                  - 'processes = 32'
-                  - 'threads = 8'
+                  - 'processes = 8'
+                  - 'threads = 4'
                   # - 'daemonize = true'
                   - ''
             /opt/onica-hello-world/onica.py:
@@ -610,7 +610,7 @@ Resources:
           - yum update -y aws-cfn-bootstrap
           - !Sub '/opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource LaunchConfig --region ${AWS::Region}'
           - !Sub '/opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource WebServerGroup --region ${AWS::Region}'
-          - 'echo "Version 0.0.22'
+          - 'echo "Version 0.0.23'
           - ''
   WebServerScaleUpPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
