@@ -1,15 +1,15 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: Deploy a Flask Application with rendering displaying a landing page including the server name
 Parameters:
-  # CfnKey:
-  #   Type: String
-  #   Description: CfnKey for S3 Bucket Access for CloudInit
-  # SecretAccessKey:
-  #   Type: String
-  #   Description: SecretAccessKey for S3 Bucket Access for CloudInit
-  # BucketName:
-  #   Type: String
-  #   Description: BucketName for S3 Bucket for CloudInit
+  CfnKey:
+    Type: String
+    Description: CfnKey for S3 Bucket Access for CloudInit
+  SecretAccessKey:
+    Type: String
+    Description: SecretAccessKey for S3 Bucket Access for CloudInit
+  BucketName:
+    Type: String
+    Description: BucketName for S3 Bucket for CloudInit
   InstanceType:
     Description: WebServer EC2 instance type
     Type: String
