@@ -1,5 +1,5 @@
 [Unit]
-Description=uWSGI Emperor
+Description=uWSGI
 After=syslog.target
 Requires=nginx
 After=nginx.service
@@ -7,8 +7,13 @@ After=nginx.service
 [Service]
 User=nginx
 Group=nginx
+PIDFile=/var/run/onica/onica.pid
+ExecStartPre=-test -d /var/run/onica || /bin/mkdir /var/run/onica
+ExecStartPre=-test -d /var/log/onica || /bin/mkdir /var/log/onica
+ExecStartPre=-/bin/chown -R nginx: /var/run/onica
+ExecStartPre=-/bin/chown -R nginx: /var/log/onica
+ExecStartPre=-touch /var/run/onica/onica.pid
 ExecStart=/opt/onica-hello-world/onica-hello-world/bin/uwsgi --ini /opt/onica-hello-world/onica.ini
-# Requires systemd version 211 or newer
 RuntimeDirectory=onica
 WorkingDirectory=/opt/onica-hello-world
 Restart=always
