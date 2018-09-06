@@ -242,16 +242,16 @@ Resources:
                     RunOrder: 3
               - Name: Approach2
                 Actions:
-                    - Name: CreateTestData
-                      ActionTypeId:
-                        Category: Invoke
-                        Owner: AWS
-                        Provider: Lambda
-                        Version: 1
-                      Configuration:
-                        FunctionName: !Ref PopulateTestData
-                        UserParameters: !Ref DDBTable
-                      RunOrder: 1
+                  - Name: CreateTestData
+                    ActionTypeId:
+                      Category: Invoke
+                      Owner: AWS
+                      Provider: Lambda
+                      Version: 1
+                    Configuration:
+                      FunctionName: !Ref PopulateTestData
+                      UserParameters: !Ref DDBTable
+                    RunOrder: 1
                   - Name: CreateChangeSet
                     ActionTypeId:
                       Category: Deploy
@@ -360,7 +360,7 @@ Resources:
                 - dynamodb:UpdateItem
                 - dynamodb:PutItem
                 Effect: Allow
-                Resource: !Ref DDBTableArn
+                Resource: !GetAtt DDBTable.Arn
         -
           PolicyName: BasicExecutionRole
           PolicyDocument:
@@ -414,5 +414,3 @@ Resources:
                       batch.put_item(row)
       Runtime: "python3.6"
       Timeout: 120
-      TracingConfig:
-        Mode: "Active"
