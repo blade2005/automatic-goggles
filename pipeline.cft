@@ -372,6 +372,16 @@ Resources:
               - logs:CreateLogStream
               - logs:PutLogEvents
               Resource: "*"
+        -
+          PolicyName: PipelineRole
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+            - Effect: Allow
+              Action:
+              - 'codepipeline:PutJobFailureResult'
+              - 'codepipeline:PutJobSuccessResult'
+              Resource: "*"
   PopulateTestData: 
     Type: "AWS::Lambda::Function"
     Properties: 
@@ -418,12 +428,13 @@ Resources:
                   table = ddb.Table(table_name)
                   with table.batch_writer(["id",]) as batch:
                       for cast_member in test_data:
-                          row = {k: serializer.serialize(v) for k,v in cast_member.items()}
-                          LOGGER.info(row)
-                          batch.put_item(row)
+                          # row = {k: serializer.serialize(v) for k,v in cast_member.items()}
+                          # row['id'] = cast_member['id']
+                          # LOGGER.info(cast_member)
+                          batch.put_item(cast_member)
                   _complete_job(cp, job_id)
               except Exception as error:
-                  _fail_job(cp, job_id, error)
+                  _fail_job(cp, job_id, error.__repr__())
 
           def _complete_job(cp, job_id):
               cp.put_job_success_result(jobId=job_id)
