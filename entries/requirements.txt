@@ -1,0 +1,1 @@
+git+git://github.com/blade2005/aws_lambda_tools.git#egg=aws_lambda

@@ -1,0 +1,127 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: "AWS::Serverless-2016-10-31"
+Description: "Api for retrieving onica id's"
+Parameters:
+  DDBTable:
+    Type: String
+    Description: DynamoDB Table name
+  DDBTableArn:
+    Type: String
+    Description: DynamoDB Table Arn
+Resources:
+  LambdaRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Path: "/"
+      Policies:
+        -
+          PolicyName: DynamoDBRead
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                - dynamodb:BatchGetItem
+                - dynamodb:DescribeTable
+                - dynamodb:GetItem
+                - dynamodb:Query
+                - dynamodb:Scan
+                Effect: Allow
+                Resource: !Ref DDBTableArn
+        -
+          PolicyName: BasicExecutionRole
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+            - Effect: Allow
+              Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+              Resource: "*"
+
+  TestEntries:
+    Type: "AWS::Serverless::Function"
+    Properties:
+      Handler: "lambda.main"
+      Runtime: "python3.6"
+      CodeUri: "entries/"
+      Role: !GetAtt LambdaRole.Arn
+      Timeout: 60
+      Environment:
+        Variables:
+          DDBTable: !Ref DDBTable
+      Events:
+        ListEntries:
+          Type: "Api"
+          Properties:
+            Path: "/id"
+            Method: "GET"
+            RestApiId: !Ref APIGateway
+        DisplayEntry:
+          Type: "Api"
+          Properties:
+            Path: "/id/{id_number}"
+            Method: "GET"
+            RestApiId: !Ref APIGateway
+  APIGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+        StageName: "dev"
+        Name: !Ref AWS::StackName
+        DefinitionBody:
+          swagger: "2.0"
+          info:
+            version: "2017-10-31T12:16:43Z"
+            title: !Ref AWS::StackName
+          basePath: "dev"
+          schemes:
+          - "https"
+          paths:
+            /id/:
+              get:
+                produces:
+                - "application/json"
+                responses:
+                  "200":
+                    description: "200 response"
+                    schema:
+                      $ref: "#/definitions/Empty"
+                  uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ListEntries.Arn}/invocations
+                  passthroughBehavior: "when_no_match"
+                  httpMethod: "POST"
+                  contentHandling: "CONVERT_TO_TEXT"
+                  type: "aws_proxy"
+            /id/{id_number}:
+              get:
+                produces:
+                - "application/json"
+                parameters:
+                - name: "id_number"
+                  in: "path"
+                  required: true
+                  type: "string"
+                responses:
+                  "200":
+                    description: "200 response"
+                    schema:
+                      $ref: "#/definitions/Empty"
+                  uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DisplayEntry.Arn}/invocations
+                  passthroughBehavior: "when_no_match"
+                  httpMethod: "POST"
+                  contentHandling: "CONVERT_TO_TEXT"
+                  type: "aws_proxy"
+Outputs:
+  ApiDomain:
+    Description: "API Domain"
+    Value: !Sub "${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com"
