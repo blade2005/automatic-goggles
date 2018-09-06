@@ -283,14 +283,11 @@ Resources:
               nginx:
                 enabled: true
                 ensureRunning: true
-          services:
             sysvinit:
               onica:
                 enabled: true
                 ensureRunning: true
                 files: /opt/onica-hello-world/onica.ini
-          commands:
-        configuwsgi:
     Properties:
       AssociatePublicIpAddress: True
       KeyName: !Ref 'KeyName'
