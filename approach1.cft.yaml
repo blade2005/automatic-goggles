@@ -216,12 +216,12 @@ Resources:
     Type: AWS::AutoScaling::LaunchConfiguration
     Metadata:
       Comment: Install a simple application
-      # AWS::CloudFormation::Authentication:
-      #   S3AccessCreds:
-      #     type: S3
-      #     accessKeyId: !Ref CfnKey
-      #     secretKey: !Ref SecretAccessKey
-      #     buckets: !Ref BucketName
+      AWS::CloudFormation::Authentication:
+        S3AccessCreds:
+          type: S3
+          accessKeyId: !Ref CfnKey
+          secretKey: !Ref SecretAccessKey
+          buckets: !Ref BucketName
       AWS::CloudFormation::Init:
         configSets: 
           default:
@@ -452,7 +452,6 @@ Resources:
                   - "ExecStartPre=-/bin/chown -R nginx: /var/log/onica"
                   - "ExecStartPre=-touch /var/run/onica/onica.pid"
                   - "ExecStart=/opt/onica-hello-world/onica-hello-world/bin/uwsgi --ini /opt/onica-hello-world/onica.ini"
-                  - "# Requires systemd version 211 or newer"
                   - "RuntimeDirectory=onica"
                   - "WorkingDirectory=/opt/onica-hello-world"
                   - "Restart=always"
@@ -610,7 +609,7 @@ Resources:
           - yum update -y aws-cfn-bootstrap
           - !Sub '/opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource LaunchConfig --region ${AWS::Region}'
           - !Sub '/opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource WebServerGroup --region ${AWS::Region}'
-          - 'echo "Version 0.0.23'
+          - 'echo "Version 0.0.24'
           - ''
   WebServerScaleUpPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
