@@ -405,19 +405,31 @@ Resources:
               """Insert some test data into our dynamodb table."""
               job_id = event["CodePipeline.job"]["id"]
               cp = boto3.client("codepipeline")
-              test_data = [{"id": "1",  "details": {"firstName": "Malcolm", "lastName": "Reynolds"}}, {"id": "2",  "details": {"firstName": "Zoe", "lastName": "Washburne"}}, {"id": "3",  "details": {"firstName": "Hoban 'Wash'", "lastName": "Washburne"}}, {"id": "4",  "details": {"firstName": "Inara", "lastName": "Serra"}}, {"id": "5",  "details": {"firstName": "Jayne", "lastName": "Cobb"}}, {"id": "6",  "details": {"firstName": "Kaylee", "lastName": "Frye"}}, {"id": "7",  "details": {"firstName": "Simon", "lastName": "Tam"}}, {"id": "8",  "details": {"firstName": "River", "lastName": "Tam"}}, {"id": "8",  "details": {"firstName": "Derrial 'Shepherd'", "lastName": "Book"}}]
-              serializer = boto3.dynamodb.types.TypeSerializer()
-              table_name = event["CodePipeline.job"]["data"]["actionConfiguration"]["configuration"]["UserParameters"]
-              rows = [{k: serializer.serialize(v) for k,v in cast_member.items()} for cast_member in test_data]
-              ddb = boto3.resource('dynamodb')
-              table = ddb.Table(table_name)
-              with table.batch_writer(["id",]) as batch:
-                  for row in rows:
-                      batch.put_item(row)
-              _complete_job(cp, job_id)
+              try:
+                  test_data = [{"id": "1",  "details": {"firstName": "Malcolm", "lastName": "Reynolds"}}, {"id": "2",  "details": {"firstName": "Zoe", "lastName": "Washburne"}}, {"id": "3",  "details": {"firstName": "Hoban 'Wash'", "lastName": "Washburne"}}, {"id": "4",  "details": {"firstName": "Inara", "lastName": "Serra"}}, {"id": "5",  "details": {"firstName": "Jayne", "lastName": "Cobb"}}, {"id": "6",  "details": {"firstName": "Kaylee", "lastName": "Frye"}}, {"id": "7",  "details": {"firstName": "Simon", "lastName": "Tam"}}, {"id": "8",  "details": {"firstName": "River", "lastName": "Tam"}}, {"id": "8",  "details": {"firstName": "Derrial 'Shepherd'", "lastName": "Book"}}]
+                  serializer = boto3.dynamodb.types.TypeSerializer()
+                  table_name = event["CodePipeline.job"]["data"]["actionConfiguration"]["configuration"]["UserParameters"]
+                  rows = [{k: serializer.serialize(v) for k,v in cast_member.items()} for cast_member in test_data]
+                  ddb = boto3.resource('dynamodb')
+                  table = ddb.Table(table_name)
+                  with table.batch_writer(["id",]) as batch:
+                      for row in rows:
+                          batch.put_item(row)
+                  _complete_job(cp, job_id)
+              except Exception as error:
+                  _fail_job(cp, job_id, error)
 
           def _complete_job(cp, job_id):
               cp.put_job_success_result(jobId=job_id)
+          def _fail_job(cp, job_id, failure_reason):
+              cp.put_job_failure_result(
+                      jobId=job_id,
+                      failureDetails={
+                          'type': 'JobFailed',
+                          'message': failure_reason,
+                          'externalExecutionId': uuid.uuid4().hex
+                      }
+                  )
 
       Runtime: "python3.6"
       Timeout: 120
