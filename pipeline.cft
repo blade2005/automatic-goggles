@@ -264,6 +264,7 @@ Resources:
                       StackName: !Sub '${ServiceName}-Stack-Approach2'
                       ChangeSetName: !Sub '${ServiceName}-ChangeSet-Approach2'
                       TemplatePath: BuiltZip::app-output_sam.yaml
+                      ParameterOverrides: !Sub '{ "DDBTable": "${DynamoDBTable}", "DDBTableArn": "${DynamoDBTable.Arn}" }'
                       Capabilities: CAPABILITY_IAM
                     InputArtifacts:
                       - Name: BuiltZip
@@ -279,7 +280,6 @@ Resources:
                       RoleArn: !GetAtt CloudFormationExecutionRole.Arn
                       StackName: !Sub '${ServiceName}-Stack-Approach2'
                       ChangeSetName: !Sub '${ServiceName}-ChangeSet-Approach2'
-                      ParameterOverrides: !Sub '{ "DDBTable": "${DynamoDBTable}", "DDBTableArn": "${DynamoDBTable.Arn}" }'
                     OutputArtifacts:
                       - Name: !Sub '${ServiceName}Approach2ChangeSet'
                     RunOrder: 3
