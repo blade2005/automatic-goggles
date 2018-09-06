@@ -417,7 +417,6 @@ Resources:
 
           def main(event, context):
               """Insert some test data into our dynamodb table."""
-              LOGGER.info(event)
               job_id = event["CodePipeline.job"]["id"]
               cp = boto3.client("codepipeline")
               try:
@@ -428,9 +427,6 @@ Resources:
                   table = ddb.Table(table_name)
                   with table.batch_writer(["id",]) as batch:
                       for cast_member in test_data:
-                          # row = {k: serializer.serialize(v) for k,v in cast_member.items()}
-                          # row['id'] = cast_member['id']
-                          # LOGGER.info(cast_member)
                           batch.put_item(cast_member)
                   _complete_job(cp, job_id)
               except Exception as error:
@@ -438,6 +434,7 @@ Resources:
 
           def _complete_job(cp, job_id):
               cp.put_job_success_result(jobId=job_id)
+
           def _fail_job(cp, job_id, failure_reason):
               cp.put_job_failure_result(
                       jobId=job_id,
