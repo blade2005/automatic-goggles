@@ -226,9 +226,6 @@ Resources:
         configSets: 
           default:
             - baseinstall
-            - flaskpackage
-            - confignginx
-            - configuwsgi
         baseinstall:
           packages:
             yum:
