@@ -262,341 +262,35 @@ Resources:
                   - "runas=root"
                   - ''
           commands:
-            02_installextras:
+            01_installextras:
               command: amazon-linux-extras install nginx1.12
-            01_installvirtualenv:
+            02_installvirtualenv:
               command: pip3.7 install virtualenv
+            03_createvirtualenv:
+              cwd: /opt/onica-hello-world
+              command: /usr/local/bin/virtualenv onica-hello-world
+            04_installdepends:
+              command: /opt/onica-hello-world/onica-hello-world/bin/pip install uwsgi flask
+            05_fixperms:
+              command: "chown -R nginx: /opt/onica-hello-world"
           services:
             sysvinit:
               cfn-hup:
                 enabled: true
                 ensureRunning: true
                 files: [/etc/cfn/cfn-hup.conf, /etc/cfn/hooks.d/cfn-auto-reloader.conf]
-        flaskpackage:
-          commands:
-            02_createvirtualenv:
-              cwd: /opt/onica-hello-world
-              command: /usr/local/bin/virtualenv onica-hello-world
-            03_installdepends:
-              command: /opt/onica-hello-world/onica-hello-world/bin/pip install uwsgi flask
-            04_fixperms:
-              command: "chown -R nginx: /opt/onica-hello-world"
-          files:
-            /opt/onica-hello-world/templates/hello.html:
-              owner: nginx
-              group: nginx
-              content: !Join
-                - "\n"
-                - - '<!doctype html>'
-                  - "<title>Chill. Relax. I'm a Panda.</title>"
-                  - '<center>'
-                  - "<h1>Chill. Relax. I'm a Panda.</h1>"
-                  - '<br />'
-                  - '<img src="http://gallery.stoneydavis.com/panda.jpg">'
-                  - '<br />'
-                  - 'This software is running on the host: {{hostname}}'
-                  - '<br />'
-                  - '</center>'
-                  - ''
-            /opt/onica-hello-world/wsgi.py:
-              owner: nginx
-              group: nginx
-              content: !Join
-                - "\n"
-                - - 'from onica import app as application'
-                  - ''
-                  - 'if __name__ == "__main__":'
-                  - '    application.run()'
-                  - ''
-            /opt/onica-hello-world/onica.ini:
-              owner: nginx
-              group: nginx
-              content: !Join
-                - "\n"
-                - - '[uwsgi]'
-                  - 'module = wsgi'
-                  - ''
-                  - 'master = true'
-                  - 'processes = 5'
-                  - 'need-app = true'
-                  - ''
-                  - 'pidfile = /var/run/%n/onica.pid'
-                  - 'socket = /var/run/%n/onica.sock'
-                  # - 'chmod-socket = 660'
-                  # - 'chown-socket = true'
-                  - 'vacuum = true'
-                  - ''
-                  # - 'log-reopen = true'
-                  # - 'logto = /var/log/onica/onica.log'
-                  # - 'log-syslog = true'
-                  - ''
-                  # - 'uid = nginx'
-                  # - 'gid = nginx'
-                  - ''
-                  - 'die-on-term = true'
-                  - 'workdir = /opt/onica-hello-world'
-                  - 'processes = 8'
-                  - 'threads = 4'
-                  # - 'daemonize = true'
-                  - ''
-            /opt/onica-hello-world/onica.py:
-              owner: nginx
-              group: nginx
-              content: !Join
-                - "\n"
-                - - 'import socket'
-                  - 'from flask import Flask'
-                  - 'app = Flask(__name__)'
-                  - ''
-                  - 'from flask import render_template'
-                  - 'from werkzeug.contrib.fixers import ProxyFix'
-                  - 'app.wsgi_app = ProxyFix(app.wsgi_app)'
-                  - ''
-                  - '@app.route("/")'
-                  - 'def hello():'
-                  - '    return render_template("hello.html", hostname=socket.getfqdn())'
-                  - ''
-                  - '@app.route("/square")'
-                  - 'def square(number=512):'
-                  - '    while True:'
-                  - '        number*number'
-                  - ''
-                  - 'if __name__ == "__main__":'
-                  - '    app.run(host="0.0.0.0")'
-                  - ''
-        confignginx:
-          services:
             sysvinit:
               nginx:
                 enabled: true
                 ensureRunning: true
-          files:
-            /etc/nginx/nginx.conf:
-              content: !Join
-                - "\n"
-                - - "user nginx;"
-                  - "worker_processes auto;"
-                  - "error_log /var/log/nginx/error.log;"
-                  - "pid /run/nginx.pid;"
-                  - ""
-                  - "# Load dynamic modules. See /usr/share/nginx/README.dynamic."
-                  - "include /usr/share/nginx/modules/*.conf;"
-                  - ""
-                  - "events {"
-                  - "    worker_connections 1024;"
-                  - "}"
-                  - ""
-                  - "http {"
-                  - "    log_format  main  '$remote_addr - $remote_user [$time_local] \"$request\" '"
-                  - "                      '$status $body_bytes_sent \"$http_referer\" '"
-                  - "                      '\"$http_user_agent\" \"$http_x_forwarded_for\"';"
-                  - "    access_log  /var/log/nginx/access.log  main;"
-                  - "    sendfile            on;"
-                  - "    tcp_nopush          on;"
-                  - "    tcp_nodelay         on;"
-                  - "    keepalive_timeout   65;"
-                  - "    types_hash_max_size 2048;"
-                  - "    include             /etc/nginx/mime.types;"
-                  - "    default_type        application/octet-stream;"
-                  - "    # Load modular configuration files from the /etc/nginx/conf.d directory."
-                  - "    # See http://nginx.org/en/docs/ngx_core_module.html#include"
-                  - "    # for more information."
-                  - "    include /etc/nginx/conf.d/*.conf;"
-                  - "    server {"
-                  - "        listen 80;"
-                  - "        server_name _;"
-                  - "        access_log  /var/log/nginx/access.log;"
-                  - "        error_log  /var/log/nginx/error.log;"
-                  - "        location / {"
-                  - "            uwsgi_pass unix:/var/run/onica/onica.sock;"
-                  - "            include uwsgi_params;"
-                  - "            proxy_redirect     off;"
-                  - "            proxy_set_header   Host                 $host;"
-                  - "            proxy_set_header   X-Real-IP            $remote_addr;"
-                  - "            proxy_set_header   X-Forwarded-For      $proxy_add_x_forwarded_for;"
-                  - "            proxy_set_header   X-Forwarded-Proto    $scheme;"
-                  - "        }"
-                  - "        include /etc/nginx/default.d/*.conf;"
-                  - "    }"
-                  - " }"
-                  - ''
-        configuwsgi:
           services:
             sysvinit:
               onica:
                 enabled: true
                 ensureRunning: true
                 files: /opt/onica-hello-world/onica.ini
-          # commands:
-          #   01_start:
-          #     command: /etc/init.d/onica start
-          #   02_start:
-          #     command: /etc/init.d/onica start
-          #     # test: test "$(pgrep uwsgi | wc -l)" -ge 5
-          #     # ignoreErrors: true
-          files:
-            /etc/systemd/system/onica.service:
-              content: !Join
-                - "\n"
-                - - "[Unit]"
-                  - "Description=uWSGI"
-                  - "After=syslog.target"
-                  - "Requires=nginx"
-                  - "After=nginx.service"
-                  - ""
-                  - "[Service]"
-                  - "User=nginx"
-                  - "Group=nginx"
-                  - "PIDFile=/var/run/onica/onica.pid"
-                  - "ExecStartPre=-test -d /var/run/onica || /bin/mkdir /var/run/onica"
-                  - "ExecStartPre=-test -d /var/log/onica || /bin/mkdir /var/log/onica"
-                  - "ExecStartPre=-/bin/chown -R nginx: /var/run/onica"
-                  - "ExecStartPre=-/bin/chown -R nginx: /var/log/onica"
-                  - "ExecStartPre=-touch /var/run/onica/onica.pid"
-                  - "ExecStart=/opt/onica-hello-world/onica-hello-world/bin/uwsgi --ini /opt/onica-hello-world/onica.ini"
-                  - "RuntimeDirectory=onica"
-                  - "WorkingDirectory=/opt/onica-hello-world"
-                  - "Restart=always"
-                  - "KillSignal=SIGQUIT"
-                  - "Type=notify"
-                  - "StandardError=syslog"
-                  - "NotifyAccess=all"
-                  - ""
-                  - "[Install]"
-                  - "WantedBy=multi-user.target"
-                  - ''
-            # /etc/init.d/onica:
-            #   mode: '000744'
-            #   owner: root
-            #   group: root
-            #   content: !Join
-            #     - "\n"
-            #     - - '#!/usr/bin/env bash'
-            #       - ''
-            #       - '### BEGIN INIT INFO'
-            #       - '# Provides:          uwsgi-emperor'
-            #       - '# Required-Start:    $all'
-            #       - '# Required-Stop:     $all'
-            #       - '# Default-Start:     2 3 4 5'
-            #       - '# Default-Stop:      0 1 6'
-            #       - '# Short-Description: starts the uwsgi emperor app server'
-            #       - '# Description:       starts uwsgi emperor app server using start-stop-daemon'
-            #       - '### END INIT INFO'
-            #       - 'set -e'
-            #       - ''
-            #       - 'PATH=/sbin:/bin:/usr/sbin:/usr/bin'
-            #       - 'DAEMON=/opt/onica-hello-world/onica-hello-world/bin/uwsgi'
-            #       - 'RUN_DIR=/var/run/onica'
-            #       - 'LOG_DIR=/var/log/onica'
-            #       - 'WORK_DIR=/opt/onica-hello-world'
-            #       - 'NAME=onica'
-            #       - 'DESC=onica'
-            #       - 'OWNER=nginx'
-            #       - 'GROUP=nginx'
-            #       - ''
-            #       - '[[ -x $DAEMON ]] || exit 0'
-            #       - '[[ -d $RUN_DIR ]] || mkdir $RUN_DIR && chown $OWNER:$GROUP $RUN_DIR'
-            #       - '[[ -d $LOG_DIR ]] || mkdir $LOG_DIR && chown $OWNER:$GROUP $LOG_DIR'
-            #       - ''
-            #       - 'PIDFILE=$RUN_DIR/$NAME.pid'
-            #       - ''
-            #       - 'do_pid_check()'
-            #       - '{'
-            #       - '    local PIDFILE=$1'
-            #       - '    [[ -f $PIDFILE ]] || return 0'
-            #       - '    local PID=$(cat $PIDFILE)'
-            #       - '    for p in $(pgrep $NAME); do'
-            #       - '        [[ $p == $PID ]] && return 1'
-            #       - '    done'
-            #       - '    return 0'
-            #       - '}'
-            #       - ''
-            #       - 'do_start()'
-            #       - '{'
-            #       - '    local PIDFILE=$RUN_DIR/$NAME.pid'
-            #       - '    local START_OPTS=" \'
-            #       - '        --ini /opt/onica-hello-world/onica.ini'
-            #       - '        --pidfile $PIDFILE \'
-            #       - '        --uid $OWNER \'
-            #       - '        --gid $GROUP \'
-            #       - '        --daemonize $LOG_DIR/onica.log"'
-            #       - '    if do_pid_check $PIDFILE; then'
-            #       - '        cd $WORK_DIR'
-            #       - '        $DAEMON $START_OPTS'
-            #       - '    else'
-            #       - '        echo "Already running!"'
-            #       - '    fi'
-            #       - '}'
-            #       - ''
-            #       - 'wait_and_clean_pidfile()'
-            #       - '{'
-            #       - '    local PIDFILE=$RUN_DIR/$NAME.pid'
-            #       - '    until do_pid_check $PIDFILE; do'
-            #       - '        echo -n "";'
-            #       - '    done'
-            #       - '    rm -f $PIDFILE'
-            #       - '}'
-            #       - ''
-            #       - 'do_stop()'
-            #       - '{'
-            #       - '    kill -s SIGINT $(cat $PIDFILE)'
-            #       - '    wait_and_clean_pidfile'
-            #       - '}'
-            #       - ''
-            #       - 'do_reload()'
-            #       - '{'
-            #       - '    kill -s SIGHUP $(cat $PIDFILE)'
-            #       - '}'
-            #       - ''
-            #       - 'do_force_reload()'
-            #       - '{'
-            #       - '    kill -s SIGTERM $(cat $PIDFILE)'
-            #       - '}'
-            #       - ''
-            #       - 'get_status()'
-            #       - '{'
-            #       - '    echo Onica Status:'
-            #       - '    kill -s SIGUSR1 $(cat $PIDFILE)'
-            #       - '}'
-            #       - ''
-            #       - 'case "$1" in'
-            #       - '    start)'
-            #       - '        echo "Starting $DESC: "'
-            #       - '        do_start'
-            #       - '        echo "$NAME."'
-            #       - '        ;;'
-            #       - '    stop)'
-            #       - '        echo -n "Stopping $DESC: "'
-            #       - '        do_stop'
-            #       - '        echo "$NAME."'
-            #       - '        ;;'
-            #       - '    reload)'
-            #       - '        echo -n "Reloading $DESC: "'
-            #       - '        do_reload'
-            #       - '        echo "$NAME."'
-            #       - '        ;;'
-            #       - '    force-reload)'
-            #       - '        echo -n "Force-reloading $DESC: "'
-            #       - '        do_force_reload'
-            #       - '        echo "$NAME."'
-            #       - '       ;;'
-            #       - '    restart)'
-            #       - '        echo  "Restarting $DESC: "'
-            #       - '        do_stop'
-            #       - '        sleep 1'
-            #       - '        do_start'
-            #       - '        echo "$NAME."'
-            #       - '        ;;'
-            #       - '    status)'
-            #       - '        get_status'
-            #       - '        ;;'
-            #       - '    *)'
-            #       - '        N=/etc/init.d/$NAME'
-            #       - '        echo "Usage: $N {start|stop|restart|reload|force-reload|status}">&2'
-            #       - '        exit 1'
-            #       - '        ;;'
-            #       - 'esac'
-            #       - 'exit 0'
+          commands:
+        configuwsgi:
     Properties:
       AssociatePublicIpAddress: True
       KeyName: !Ref 'KeyName'
@@ -611,7 +305,7 @@ Resources:
           - yum update -y aws-cfn-bootstrap
           - !Sub '/opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource LaunchConfig --region ${AWS::Region}'
           - !Sub '/opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource WebServerGroup --region ${AWS::Region}'
-          - 'echo "Version 0.0.27'
+          - 'echo "Version 0.0.28'
           - ''
   WebServerScaleUpPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
