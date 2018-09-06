@@ -384,6 +384,10 @@ Resources:
         ZipFile: >
           import boto3
 
+          import boto3.dynamodb
+
+          import uuid
+
           import json
 
           import logging
@@ -403,6 +407,7 @@ Resources:
 
           def main(event, context):
               """Insert some test data into our dynamodb table."""
+              LOGGER.info(event)
               job_id = event["CodePipeline.job"]["id"]
               cp = boto3.client("codepipeline")
               try:
