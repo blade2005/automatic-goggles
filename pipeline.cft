@@ -263,7 +263,7 @@ Resources:
                       RoleArn: !GetAtt CloudFormationExecutionRole.Arn
                       StackName: !Sub '${ServiceName}-Stack-Approach2'
                       ChangeSetName: !Sub '${ServiceName}-ChangeSet-Approach2'
-                      TemplatePath: BuiltZip::app-sam.yaml
+                      TemplatePath: BuiltZip::app-output_sam.yaml
                       Capabilities: CAPABILITY_IAM
                     InputArtifacts:
                       - Name: BuiltZip
