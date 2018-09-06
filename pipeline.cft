@@ -250,7 +250,7 @@ Resources:
                       Version: 1
                     Configuration:
                       FunctionName: !Ref PopulateTestData
-                      UserParameters: !Ref DDBTable
+                      UserParameters: !Ref DynamoDBTable
                     RunOrder: 1
                   - Name: CreateChangeSet
                     ActionTypeId:
@@ -279,7 +279,7 @@ Resources:
                       RoleArn: !GetAtt CloudFormationExecutionRole.Arn
                       StackName: !Sub '${ServiceName}-Stack-Approach2'
                       ChangeSetName: !Sub '${ServiceName}-ChangeSet-Approach2'
-                      ParameterOverrides: !Sub '{ "DDBTable": "${DDBTable}", "DDBTableArn": "${DDBTable.Arn}" }'
+                      ParameterOverrides: !Sub '{ "DDBTable": "${DynamoDBTable}", "DDBTableArn": "${DynamoDBTable.Arn}" }'
                     OutputArtifacts:
                       - Name: !Sub '${ServiceName}Approach2ChangeSet'
                     RunOrder: 3
@@ -313,13 +313,13 @@ Resources:
           Principal:
             AWS: !GetAtt CfnUser.Arn
       Bucket: !Ref HelloWorldRoot
-  DDBTable:
+  DynamoDBTable:
     Type: "AWS::DynamoDB::Table"
     Properties:
       AttributeDefinitions:
         -
           AttributeName: "id"
-          AttributeType: "S"
+          AttributeType: "N"
       KeySchema:
         -
           AttributeName: "id"
@@ -329,7 +329,7 @@ Resources:
         WriteCapacityUnits: 1
       StreamSpecification:
         StreamViewType: "NEW_AND_OLD_IMAGES"
-      TableName: "onica-test-data"
+      # TableName: "onica-test-data"
   LambdaRole:
     Type: "AWS::IAM::Role"
     Properties:
@@ -360,7 +360,7 @@ Resources:
                 - dynamodb:UpdateItem
                 - dynamodb:PutItem
                 Effect: Allow
-                Resource: !GetAtt DDBTable.Arn
+                Resource: !GetAtt DynamoDBTable.Arn
         -
           PolicyName: BasicExecutionRole
           PolicyDocument:
@@ -379,12 +379,12 @@ Resources:
       Role: !GetAtt LambdaRole.Arn
       Environment:
         Variables:
-          DDBTable: !Ref DDBTable
+          DDBTable: !Ref DynamoDBTable
       Code:
         ZipFile: >
           import boto3
 
-          import boto3.dynamodb
+          import boto3.dynamodb.types
 
           import uuid
 
@@ -411,14 +411,15 @@ Resources:
               job_id = event["CodePipeline.job"]["id"]
               cp = boto3.client("codepipeline")
               try:
-                  test_data = [{"id": "1",  "details": {"firstName": "Malcolm", "lastName": "Reynolds"}}, {"id": "2",  "details": {"firstName": "Zoe", "lastName": "Washburne"}}, {"id": "3",  "details": {"firstName": "Hoban 'Wash'", "lastName": "Washburne"}}, {"id": "4",  "details": {"firstName": "Inara", "lastName": "Serra"}}, {"id": "5",  "details": {"firstName": "Jayne", "lastName": "Cobb"}}, {"id": "6",  "details": {"firstName": "Kaylee", "lastName": "Frye"}}, {"id": "7",  "details": {"firstName": "Simon", "lastName": "Tam"}}, {"id": "8",  "details": {"firstName": "River", "lastName": "Tam"}}, {"id": "8",  "details": {"firstName": "Derrial 'Shepherd'", "lastName": "Book"}}]
+                  test_data = [{"id": 1,  "details": {"firstName": "Malcolm", "lastName": "Reynolds"}}, {"id": 2,  "details": {"firstName": "Zoe", "lastName": "Washburne"}}, {"id": 3,  "details": {"firstName": "Hoban 'Wash'", "lastName": "Washburne"}}, {"id": 4,  "details": {"firstName": "Inara", "lastName": "Serra"}}, {"id": 5,  "details": {"firstName": "Jayne", "lastName": "Cobb"}}, {"id": 6,  "details": {"firstName": "Kaylee", "lastName": "Frye"}}, {"id": 7,  "details": {"firstName": "Simon", "lastName": "Tam"}}, {"id": 8,  "details": {"firstName": "River", "lastName": "Tam"}}, {"id": 8,  "details": {"firstName": "Derrial 'Shepherd'", "lastName": "Book"}}]
                   serializer = boto3.dynamodb.types.TypeSerializer()
                   table_name = event["CodePipeline.job"]["data"]["actionConfiguration"]["configuration"]["UserParameters"]
-                  rows = [{k: serializer.serialize(v) for k,v in cast_member.items()} for cast_member in test_data]
                   ddb = boto3.resource('dynamodb')
                   table = ddb.Table(table_name)
                   with table.batch_writer(["id",]) as batch:
-                      for row in rows:
+                      for cast_member in test_data:
+                          row = {k: serializer.serialize(v) for k,v in cast_member.items()}
+                          LOGGER.info(row)
                           batch.put_item(row)
                   _complete_job(cp, job_id)
               except Exception as error:
