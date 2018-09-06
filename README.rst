@@ -46,3 +46,49 @@ Delete the stack by:
 Update stack by:
 
     stack=helloworld;aws cloudformation update-stack --stack-name $stack --template-body file://approach1.cft.yaml --cli-input-json file://update-approach1.conf && aws cloudformation wait stack-update-complete --stack $stack
+
+
+Onica Approach 2
+================
+
+Objective: Launch a simple API utilizing automation and AWS best practices.
+
+DynamoDB table
+
+- Must contain multiple unique records (sample structure provided below, you may determine your own schema as desired)
+
+Lambda Function
+
+- Must be written in language supported natively by AWS (Node.js, Java, C#, Go, Python – NO SHIMS)
+- Must log execution output to CloudWatch Logs
+
+API Gateway with two stages (dev and prod) exposing endpoints for the Lambda function
+
+- Must have a path to expose all DynamoDB records as well as a single record
+
+§ Example:
+
+/id should return a list of all records
+1
+2
+3
+45
+
+/id/5 should return the details of record #5 in DynamoDB
+{
+“id”: “5”,
+“details” {
+“firstName”: “Onica”,
+“lastName”: “Test”
+}
+}
+
+CloudWatch Logs
+
+- Must have a retention policy of 30 days
+
+IAM roles and policies must be created in a least permissive model (AVOID USING AWS MANAGED POLICIES)
+
+All AWS resources must be created using Serverless Framework, Terraform, or CloudFormation
+
+No resources may be created or managed by hand other than EC2 SSH keys
