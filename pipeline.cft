@@ -242,6 +242,16 @@ Resources:
                     RunOrder: 3
               - Name: Approach2
                 Actions:
+                    - Name: CreateTestData
+                      ActionTypeId:
+                        Category: Invoke
+                        Owner: AWS
+                        Provider: Lambda
+                        Version: 1
+                      Configuration:
+                        FunctionName: !Ref PopulateTestData
+                        UserParameters: !Ref DDBTable
+                      RunOrder: 1
                   - Name: CreateChangeSet
                     ActionTypeId:
                       Category: Deploy
@@ -255,7 +265,6 @@ Resources:
                       ChangeSetName: !Sub '${ServiceName}-ChangeSet-Approach2'
                       TemplatePath: BuiltZip::app-sam.yaml
                       Capabilities: CAPABILITY_IAM
-
                     InputArtifacts:
                       - Name: BuiltZip
                     RunOrder: 2
@@ -270,6 +279,7 @@ Resources:
                       RoleArn: !GetAtt CloudFormationExecutionRole.Arn
                       StackName: !Sub '${ServiceName}-Stack-Approach2'
                       ChangeSetName: !Sub '${ServiceName}-ChangeSet-Approach2'
+                      ParameterOverrides: !Sub '{ "DDBTable": "${DDBTable}", "DDBTableArn": "${DDBTable.Arn}" }'
                     OutputArtifacts:
                       - Name: !Sub '${ServiceName}Approach2ChangeSet'
                     RunOrder: 3
@@ -303,3 +313,106 @@ Resources:
           Principal:
             AWS: !GetAtt CfnUser.Arn
       Bucket: !Ref HelloWorldRoot
+  DDBTable:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      AttributeDefinitions:
+        -
+          AttributeName: "id"
+          AttributeType: "S"
+      KeySchema:
+        -
+          AttributeName: "id"
+          KeyType: "HASH"
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+      StreamSpecification:
+        StreamViewType: "NEW_AND_OLD_IMAGES"
+      TableName: "onica-test-data"
+  LambdaRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Path: "/"
+      Policies:
+        -
+          PolicyName: DynamoDBRead
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                - dynamodb:BatchGetItem
+                - dynamodb:DescribeTable
+                - dynamodb:GetItem
+                - dynamodb:Query
+                - dynamodb:Scan
+                - dynamodb:BatchWriteItem
+                - dynamodb:UpdateItem
+                - dynamodb:PutItem
+                Effect: Allow
+                Resource: !Ref DDBTableArn
+        -
+          PolicyName: BasicExecutionRole
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+            - Effect: Allow
+              Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+              Resource: "*"
+  PopulateTestData: 
+    Type: "AWS::Lambda::Function"
+    Properties: 
+      Handler: "lambda.main"
+      Role: !GetAtt LambdaRole.Arn
+      Environment:
+        Variables:
+          DDBTable: !Ref DDBTable
+      Code:
+        ZipFile: >
+          import boto3
+
+          import json
+
+          import logging
+
+          import os
+
+          FORMAT = '%(asctime)-15s %(levelname)s %(module)s.%(funcName)s %(message)s'
+
+          DATEFMT = "%Y-%m-%d %H:%M:%S"
+
+          logging.basicConfig(level=logging.INFO, format=FORMAT, datefmt=DATEFMT)
+
+          LOGGER = logging.getLogger()
+
+          LOGGER.setLevel(logging.INFO)
+
+
+          def main(event, context):
+              """Insert some test data into our dynamodb table."""
+              test_data = [{"id": "1",  "details": {"firstName": "Malcolm", "lastName": "Reynolds"}}, {"id": "2",  "details": {"firstName": "Zoe", "lastName": "Washburne"}}, {"id": "3",  "details": {"firstName": "Hoban 'Wash'", "lastName": "Washburne"}}, {"id": "4",  "details": {"firstName": "Inara", "lastName": "Serra"}}, {"id": "5",  "details": {"firstName": "Jayne", "lastName": "Cobb"}}, {"id": "6",  "details": {"firstName": "Kaylee", "lastName": "Frye"}}, {"id": "7",  "details": {"firstName": "Simon", "lastName": "Tam"}}, {"id": "8",  "details": {"firstName": "River", "lastName": "Tam"}}, {"id": "8",  "details": {"firstName": "Derrial 'Shepherd'", "lastName": "Book"}}]
+              serializer = boto3.dynamodb.types.TypeSerializer()
+              table_name = event["CodePipeline.job"]["data"]["actionConfiguration"]["configuration"]["UserParameters"]
+              rows = [{k: serializer.serialize(v) for k,v in cast_member.items()} for cast_member in test_data]
+              ddb = boto3.resource('dynamodb')
+              table = ddb.Table(table_name)
+              with table.batch_writer(["id",]) as batch:
+                  for row in rows:
+                      batch.put_item(row)
+      Runtime: "python3.6"
+      Timeout: 120
+      TracingConfig:
+        Mode: "Active"
