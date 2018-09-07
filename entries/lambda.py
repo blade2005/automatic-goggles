@@ -51,7 +51,9 @@ def display_selected_entries(table, event):
     except ValueError:
         return generate_response(400, {'error': 'Must provide integer for id_number'})
     results = table.get_item(Key={'id': int(event['pathParameters']['id_number'])})
-    return generate_response(200, results['Item'])
+    data = results['Item']
+    data['id'] = int(data['id'])
+    return generate_response(200, data)
 
 def display_all_entries(table, event):
     results = table.scan()
