@@ -67,69 +67,12 @@ Resources:
           Properties:
             Path: "/id"
             Method: "GET"
-            RestApiId: !Ref APIGateway
         DisplayEntry:
           Type: "Api"
           Properties:
             Path: "/id/{id_number}"
             Method: "GET"
-            RestApiId: !Ref APIGateway
-  APIGateway:
-    Type: AWS::Serverless::Api
-    Properties:
-        StageName: "dev"
-        Name: !Ref AWS::StackName
-        DefinitionBody:
-          swagger: "2.0"
-          info:
-            version: "2017-10-31T12:16:43Z"
-            title: !Ref AWS::StackName
-          basePath: "dev"
-          schemes:
-          - "https"
-          paths:
-            /id/:
-              get:
-                produces:
-                - "application/json"
-                responses:
-                  "200":
-                    description: "200 response"
-                    schema:
-                      $ref: "#/definitions/Empty"
-                  uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TestEntries.Arn}/invocations
-                  passthroughBehavior: "when_no_match"
-                  httpMethod: "POST"
-                  contentHandling: "CONVERT_TO_TEXT"
-                  type: "aws_proxy"
-                x-amazon-apigateway-integration:
-                  responses:
-                    default:
-                      statusCode: "200"
-            /id/{id_number}:
-              get:
-                produces:
-                - "application/json"
-                parameters:
-                - name: "id_number"
-                  in: "path"
-                  required: true
-                  type: "string"
-                responses:
-                  "200":
-                    description: "200 response"
-                    schema:
-                      $ref: "#/definitions/Empty"
-                  uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TestEntries.Arn}/invocations
-                  passthroughBehavior: "when_no_match"
-                  httpMethod: "POST"
-                  contentHandling: "CONVERT_TO_TEXT"
-                  type: "aws_proxy"
-                x-amazon-apigateway-integration:
-                  responses:
-                    default:
-                      statusCode: "200"
 Outputs:
   ApiUrl:
     Description: URL for application
-    Value: !Sub 'https://${APIGateway}.execute-api.${AWS::Region}.amazonaws.com/Stage'
+    Value: !Sub 'https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Stage'
