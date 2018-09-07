@@ -126,4 +126,4 @@ Outputs:
     Description: URL for application
     Value: !Sub 'https://${APIGateway}.execute-api.${AWS::Region}.amazonaws.com/Stage'
     Export:
-      Name: !Sub 'ApiUrl-${Stage}'
+      Name: ApiUrl
