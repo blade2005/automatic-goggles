@@ -33,21 +33,6 @@ All AWS resources must be created using Terraform or CloudFormation
 No resources may be created or managed by hand other than EC2 SSH keys
 
 
-Deploy
-======
-You can deploy by:
-
-	stack=helloworld;aws cloudformation create-stack --cli-input-json file://approach1.conf --template-body file://approach1.cft.yaml --stack-name $stack && aws cloudformation wait stack-create-complete --stack-name $stack; aws cloudformation describe-stacks
-
-Delete the stack by:
-
-	stack=helloworld;aws cloudformation delete-stack --stack-name $stack && aws cloudformation wait stack-delete-complete --stack-name $stack
-
-Update stack by:
-
-    stack=helloworld;aws cloudformation update-stack --stack-name $stack --template-body file://approach1.cft.yaml --cli-input-json file://update-approach1.conf && aws cloudformation wait stack-update-complete --stack $stack
-
-
 Onica Approach 2
 ================
 
@@ -92,3 +77,26 @@ IAM roles and policies must be created in a least permissive model (AVOID USING 
 All AWS resources must be created using Serverless Framework, Terraform, or CloudFormation
 
 No resources may be created or managed by hand other than EC2 SSH keys
+
+
+Deploying the Pipeline
+======================
+
+Deploy
+======
+
+- Run aws cloudformation validate-template --template-body file://pipeline.cft > pipeline.config
+- Update pipeline.config to the desired value
+- Execute the following in a terminal
+
+    stack=helloworld
+    aws cloudformation create-stack --cli-input-json file://pipeling.config --template-body file://pipeline.cft --stack-name $stack && aws cloudformation wait stack-create-complete --stack-name $stack
+    aws cloudformation describe-stacks
+
+- Find your CodeCommit repo
+- Add the remote to this git repo
+
+    git remote add aws <git remote url here>
+    git push aws master
+
+- The pipeline will pick up the push of code and run through the pipeline
