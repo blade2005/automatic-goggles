@@ -102,6 +102,10 @@ Resources:
                   httpMethod: "POST"
                   contentHandling: "CONVERT_TO_TEXT"
                   type: "aws_proxy"
+                x-amazon-apigateway-integration:
+                  responses:
+                    default:
+                      statusCode: "200"
             /id/{id_number}:
               get:
                 produces:
@@ -121,9 +125,11 @@ Resources:
                   httpMethod: "POST"
                   contentHandling: "CONVERT_TO_TEXT"
                   type: "aws_proxy"
+                x-amazon-apigateway-integration:
+                  responses:
+                    default:
+                      statusCode: "200"
 Outputs:
   ApiUrl:
     Description: URL for application
     Value: !Sub 'https://${APIGateway}.execute-api.${AWS::Region}.amazonaws.com/Stage'
-    Export:
-      Name: ApiUrl
