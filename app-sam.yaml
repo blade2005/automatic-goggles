@@ -72,6 +72,11 @@ Resources:
           Properties:
             Path: "/id/{id_number}"
             Method: "GET"
+  TestEntriesLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 30
+      LogGroupName: !Sub '/aws/lambda/${TestEntries}'
 Outputs:
   ApiUrl:
     Description: URL for application
