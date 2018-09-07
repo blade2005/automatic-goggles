@@ -122,6 +122,8 @@ Resources:
                   contentHandling: "CONVERT_TO_TEXT"
                   type: "aws_proxy"
 Outputs:
-  ApiDomain:
-    Description: "API Domain"
-    Value: !Sub "${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com"
+  ApiUrl:
+    Description: URL for application
+    Value: !Sub 'https://${APIGateway}.execute-api.${AWS::Region}.amazonaws.com/Stage'
+    Export:
+      Name: !Sub 'ApiUrl-${Stage}'
