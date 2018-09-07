@@ -276,11 +276,9 @@ Resources:
                 enabled: true
                 ensureRunning: true
                 files: [/etc/cfn/cfn-hup.conf, /etc/cfn/hooks.d/cfn-auto-reloader.conf]
-            sysvinit:
               nginx:
                 enabled: true
                 ensureRunning: true
-            sysvinit:
               onica:
                 enabled: true
                 ensureRunning: true
@@ -299,7 +297,7 @@ Resources:
           - yum update -y aws-cfn-bootstrap
           - !Sub '/opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource LaunchConfig --region ${AWS::Region}'
           - !Sub '/opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource WebServerGroup --region ${AWS::Region}'
-          - 'echo "Version 0.1.1'
+          - 'echo "Version 0.1.2'
           - ''
   WebServerScaleUpPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
